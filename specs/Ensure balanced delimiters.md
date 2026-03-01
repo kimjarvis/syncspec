@@ -1,11 +1,5 @@
 In source ensure_balanced_delimiters.py
 
-Define a unary function with signature:
-
-```python
-def ensure_balanced_delimiters(encode_parameters: EncodeParameters) -> EnsureBalancedDelimiters | Error:
-```
-
 Import this class from `encode_parameters.py`:
 
 ```python
@@ -28,10 +22,16 @@ Define a class:
 
 ```python
 @dataclass
-class EnsureBalancedDelimiters:  
-    data: str = ""
-    open_delimiter: str = "{{"
-    close_delimiter: str ="}}"    
+class BalancedDelimitersEnsured:  
+    text: str 
+    open_delimiter: str # copied 
+    close_delimiter: str
+```
+
+Define a unary function with signature:
+
+```python
+def ensure_balanced_delimiters(encode_parameters: EncodeParameters) -> BalancedDelimitersEnsured | Error:
 ```
 
 Action:
@@ -43,24 +43,22 @@ Catch value errors in the function and return an Error object with the message.
 
 When there is no error return an object of class `EnsureBalancedDelimiters` that is a copy of the `EncodeParameters` object.
 
-Safely assume:
+# Safely assume
 
+- Delimiters appear in valid pairs.
 - Delimiters are not empty strings.
-- Delimiters are distinct.
-- Delimiters do not overlap structurally.
-  
-Note that:
-
-- Multiple sequential pairs are valid; only nesting is invalid.
+- Delimiters are distinct, e.g., they will not be `{{` and `{{`.
+- Delimiters do not overlap structurally, , e.g., they will not be `{{` and `{`.
+- Delimiters may contain regex special characters  e.g., `*`.
+- Strings are valid Unicode strings.
 # Write pytest to verify the functionality 
-  
-In source file `test_ensure_balanced_delimiters.py`.
+
+In source file `test_parse_segments.py`.
 
 - Tests should be individual functions. Do not define a test class.    
 - Use `@pytest.mark.parametrize` to create concise tests.  
-  
 # Explain the solution  
-  
+
 - Describe any logical inconsistencies in the function specification and suggest improvements. 
 - Describe any assumptions which are not explicitly stated in the function specification.
 

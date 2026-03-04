@@ -9,18 +9,14 @@ class Fragment:
     close_delimiter: str
 ```
 
-In the file `src/syncspec/fragments_to_tracker.py`:
+In the file `src/syncspec/fragments_to_blocks.py`:
 
 Define a class:
 ```python
-@dataclass
-class Tracker:  
-	stack: list[str]
-	index: int
-    name: str     
-    open_delimiter: str 
-    close_delimiter: str
-    line: int
+class BlockManager:
+    def __init__(self):
+        self.stack: List[str] = []
+        self.line: int = 1
 ```
 
 Define a class:
@@ -30,8 +26,8 @@ class Block:
     prefix_directive: str 
     suffix_directive: str
     text: str
-    name: str     
     line: int
+    name: str     
     open_delimiter: str 
     close_delimiter: str    
 ```
@@ -41,42 +37,37 @@ Define a class:
 @dataclass
 class Text:  
     text: str
-    name: str     
     line: int
+    name: str     
     open_delimiter: str 
     close_delimiter: str
 ```
 
 Define a unary function with signature:
 ```python
-def fragments_to_tracker(fragment: Fragment) -> Block:
+def fragments_to_blocks(fragment: Fragment) -> Block | Text | None:
 ```
 # Implement the unary function
 
-Encapsulate state in a  class `TrackerManager`
+Encapsulate state in the class `BlockManager`
 
-- Count how many times the function has been called in field `index`.  The first call shall have an index of zero.
-- Accumulates the number of lines, terminated by`\n`, in the text fragments in field `line`.  Initialise to 1.  
+- Accumulates the number of lines, terminated by`\n`, in the text fragments in field `line`.   
 - Record the fragment `text` fields in a stack `stack`.
 
 The each time the function is called:
-- Copy fields from the Fragment to Tracker.  
-- The stack field shall be a copy of the state of the stack in `TrackerManager`
-- Copy the index
-- Make a copy of the stack.
-- Return a `Tracker` object
+- Update `BlockManger`
 
-When the index value is divisible by 4:
-- Clear the stack in `TrackerManager`.
-- Return a tuple containing
-- A `Tracker` object.
-- A `Block` object. 
-	- The prefix_directive shall be the value of `stack[1]`
-	- The suffix_directive shall be the value of `stack[3]`
-	- The text shall be the value of `stack[2]`
+When the length of `stack` is one return:
 - A `Text` object:
 	- The text shall be the value of `stack[0]`
 
+When the length of `stack` plus one is greater than one and divisible by 4 return a tuple containing:
+- A `Block` object. 
+	- The prefix_directive shall be the value of `stack[-2]`
+	- The suffix_directive shall be the value of `stack[-4]`
+	- The text shall be the value of `stack[-3]`
+- A `Text` object:
+	- The text shall be the value of `stack[-1]`
 
 # Write pytest to verify the functionality 
 

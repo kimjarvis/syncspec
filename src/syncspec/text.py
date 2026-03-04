@@ -1,5 +1,5 @@
 from dataclasses import dataclass
 
 @dataclass
-class Error:
-    message: str
+class Text:
+    text: str

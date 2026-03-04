@@ -3,10 +3,13 @@ import inspect
 from typing import get_type_hints
 import pprint
 
+from src.syncspec.monad import Monad
+from src.syncspec.error import Error
+from src.syncspec.stop import Stop
+from src.syncspec.text import Text
+
 from src.syncspec.ensure_balanced_delimiters import ensure_balanced_delimiters
-from src.syncspec.encode_parameters import encode_parameters
 from src.syncspec.parse_into_fragments import parse_into_fragments
-from src.syncspec.fragments_to_tracker import fragments_to_tracker
 
 def build_rules(rule_functions):
     rules = []
@@ -20,7 +23,9 @@ def build_rules(rule_functions):
 def apply_rules(facts, rules):
     new_facts = []
     i = 0
+    Monad.state["length"]: int = len(facts)
     while i < len(facts):
+        Monad.state["index"]: int = i
         for types, fn in rules:
             n = len(types)
             if i + n <= len(facts) and all(isinstance(x, t) for x, t in zip(facts[i:i+n], types)):
@@ -55,14 +60,12 @@ def production(facts, rules):
         return facts
 
 def main():
-    ep = encode_parameters("""A{{B}}C{{D}}E{{F}}G{{H}}I""", "test_name", "{{", "}}")
-    print(ep)
+    Monad.state["open_delimiter"]: str = "{{",
+    Monad.state["close_delimiter"]: str = "}}",
 
-
-    facts = [ep]
+    facts = [Text("""A{{B}}C{{D}}E{{F}}G{{H}}I""")]
     rules = build_rules([ensure_balanced_delimiters,
                          parse_into_fragments,
-                         fragments_to_tracker,
                          ])
     result = production(facts, rules)
     pprint.pp(result)

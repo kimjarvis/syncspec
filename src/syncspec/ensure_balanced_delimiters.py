@@ -12,6 +12,7 @@ class BalancedDelimitersEnsured:
 
 
 def ensure_balanced_delimiters(encoded_parameters: EncodedParameters) -> BalancedDelimitersEnsured | Error:
+    print(f"ensure_balanced_delimiters called with: {encoded_parameters}")
     text = encoded_parameters.text
     open_d = encoded_parameters.open_delimiter
     close_d = encoded_parameters.close_delimiter
@@ -100,4 +101,6 @@ def _validate(text: str, name: str, open_d: str, close_d: str) -> BalancedDelimi
         line = text[:last_open_index].count('\n') + 1
         return Error(f"Unclosed open delimiter", name, line)
 
-    return BalancedDelimitersEnsured(text, name, open_d, close_d)
+    x = BalancedDelimitersEnsured(text, name, open_d, close_d)
+    print(f"ensure_balanced_delimiters returning: {x}")
+    return x

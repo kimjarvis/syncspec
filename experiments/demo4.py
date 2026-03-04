@@ -7,9 +7,12 @@ class A: id: str = "A"
 @dataclass
 class B: id: str = "B"
 @dataclass
+class C: id: str = "C"
+@dataclass
 class D: id: str = "D"
 
-def h(a: A, b: B): return D()
+def h(a: A, b: B): return C()
+def f(x: C): return D()
 
 def build_pipeline(funcs):
     pipeline = []
@@ -46,8 +49,8 @@ def transform(items, pipeline):
     return new_items
 
 def main():
-    items = [A(), B(), A(), A(), B()]
-    pipeline = build_pipeline([h])
+    items = [A(), A(), B(), A(), A(), B()]
+    pipeline = build_pipeline([h,f])
 
     for _ in range(10):
         new_items = transform(items, pipeline)

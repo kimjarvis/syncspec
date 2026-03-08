@@ -43,7 +43,7 @@ def ensure_balanced_delimiters(encoded_parameters: EncodedParameters) -> Balance
 
 When any of these conditions are violated return object of type Error with an informative message, a copy of the name and the line number on which the error was detected.
 
--  Line numbers are 1-based.
+- Line numbers are 1-based.
 - If an open delimiter is never closed, the error line corresponds to the line where the open delimiter started.
 
 Otherwise, copy the fields of the parameter object into the returned object.

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from src.syncspec.encode_parameters import EncodedParameters
+from src.syncspec.test import Text
 from src.syncspec.error import Error
 
 

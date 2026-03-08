@@ -8,8 +8,8 @@ from src.syncspec.error import Error
 from src.syncspec.stop import Stop
 from src.syncspec.text import Text
 
-from src.syncspec.ensure_balanced_delimiters import ensure_balanced_delimiters
-from src.syncspec.parse_into_fragments import parse_into_fragments
+from src.syncspec.validate_text import validate_text
+
 
 def build_rules(rule_functions):
     rules = []
@@ -20,16 +20,21 @@ def build_rules(rule_functions):
         rules.append((types, fn))
     return rules
 
+
 def apply_rules(facts, rules):
+    for f in facts:
+        if isinstance(f, (Error, Stop)):
+            raise f
+
     new_facts = []
     i = 0
-    Monad.state["length"]: int = len(facts)
+    Monad.state["length"] = len(facts)
     while i < len(facts):
-        Monad.state["index"]: int = i
+        Monad.state["index"] = i
         for types, fn in rules:
             n = len(types)
-            if i + n <= len(facts) and all(isinstance(x, t) for x, t in zip(facts[i:i+n], types)):
-                res = fn(*facts[i:i+n])
+            if i + n <= len(facts) and all(isinstance(x, t) for x, t in zip(facts[i:i + n], types)):
+                res = fn(*facts[i:i + n])
                 new_facts.extend(res) if isinstance(res, (list, tuple)) else new_facts.append(res)
                 i += n
                 break
@@ -38,7 +43,8 @@ def apply_rules(facts, rules):
             i += 1
     return new_facts
 
-def production(facts, rules):
+
+def production(facts, rules, halt=Stop):
     try:
         if not isinstance(facts, list):
             raise TypeError("facts must be a list")
@@ -55,20 +61,25 @@ def production(facts, rules):
             raise RuntimeError("Exceeded 10 iterations without stabilization")
 
         return facts
+    except (Error, halt) as e:
+        print(f"{type(e).__name__}: {e.message}")
+        return facts
     except Exception as e:
         print(f"Error: {e}")
         return facts
 
+
 def main():
-    Monad.state["open_delimiter"]: str = "{{",
-    Monad.state["close_delimiter"]: str = "}}",
+    Monad.state["open_delimiter"] = "{{"
+    Monad.state["close_delimiter"] = "}}"
+    Monad.state["name"] = "test"
 
     facts = [Text("""A{{B}}C{{D}}E{{F}}G{{H}}I""")]
-    rules = build_rules([ensure_balanced_delimiters,
-                         parse_into_fragments,
+    rules = build_rules([validate_text,
                          ])
-    result = production(facts, rules)
+    result = production(facts, rules, Stop)
     pprint.pp(result)
+
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
 @dataclass
-class Error:
-    message: str
-    name: str
+class Fragment:
+    text: str
     line_number: int

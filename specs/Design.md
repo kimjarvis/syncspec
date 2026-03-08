@@ -3,7 +3,7 @@
 ### Validate Text  
 
 Performs all validation.
-### Generate Fragments
+### Fragment Text
 
 Returns Fragment objects.
 ### Generate Blocks

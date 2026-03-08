@@ -31,55 +31,56 @@ class Error:
     line_number: int
 ```
 
-Class Monad preserves state between function calls in a dictionary.
-
-Import this class from file `src/syncspec/monad.py`:
+Import this class from file `src/syncspec/validate_text_context.py`:
 ```python
-from dataclasses import dataclass
-from typing import ClassVar, Dict, Any
+from dataclasses import dataclass, field
+from typing import Any, Dict
 
 @dataclass
-class Monad:
-    state: ClassVar[Dict[str, Dict[str, Any]]] = {}
+class ValidateTextContext:
+    name: str
+    open_delimiter: str
+    close_delimiter: str
+    line_number: int    
 ```
-
-Monad is initialised with values.  For example:
-```python
-    Monad.state["open_delimiter"] = "{{"
-    Monad.state["close_delimiter"] = "}}"
-    Monad.state["name"] = "test"
-    Monad.state["length"]
-    Monad.state["index"]
-```
-- When  `Monad.state["index"] == 0` we call this the first function call.
-- When  `Monad.state["index"] + 1 == Monad.state["length"]` we call this the last function call.
 
 ### Implement the unary function Validate Text
 
 In the file `src/syncspec/validate_text.py`.
 
-Define a unary function with signature:
+Define a closure factory with a unary function with signature:
 
 ```python
-def validate_text(text: Text) -> ValidatedText | Error:
+def make_validate_text(context: ValidateTextContext):
+    def validate_text(text: Text) -> Union[ValidatedText, Error]:
 ```
 
 ### Ensure that
 
-### Verify the monad
+### Verify the context
 
 #### Ensure that:
 
+- The required fields exist within the context.state `["open_delimiter", "close_delimiter", "name"]`
 - Delimiters are valid Unicode strings.
 - Delimiters are not empty strings.
 - Delimiters are distinct, e.g., they will not be `{{` and `{{`.
 - Delimiters do not overlap structurally, , e.g., they will not be `{{` and `{`. 
-- Monad.state["index"] < Monad.state["length"]
-- 0 <= Monad.state["index"]
+- name is a valid unicode string.
 #### Assume that:
 
+- The context is instantiated before the factory is called.
 - Delimiters may contain regex special characters  e.g., `*`.
 - The text has POSIX line endings  e.t.,`\n`.
+- src/syncspec is a Python package.
+
+### Keep track of line numbers
+
+- Field "line_number" keeps track of line numbers within text.
+- Line numbers are 1-based.  The initial value of ValidateTextContext.line_number is 1.
+- The line number reported when class Error is returned is the line number where the error was detected. 
+- The line number is part of the context shared across multiple calls.
+- The line number acts as a global offset. 
 ### Verify the text
 
 #### Ensure that:
@@ -93,16 +94,16 @@ def validate_text(text: Text) -> ValidatedText | Error:
 	- One pair `A{{B}}C` is not valid.  
 	- Two pairs `A{{B}}C{{D}}E` is valid.  
 	- Three pairs `A{{B}}C{{D}}E{{F}}G` are not valid.
+
+### Note that
+
+Requiring an even number of delimiter pairs is a specific requirement for this application.
 ### Error return
 
 When any of the conditions are violated return object of type Error with an informative message, a copy of the name and the line number on which the error was detected.
 ### Successful return
 
 Return ValidatedText object.  Copy the Text.text field to ValidatedText.text.
-#### Assume that:
-
-- Line numbers are 1-based.
-- If an open delimiter is never closed, the error line corresponds to the line where the open delimiter started.
 ## Test the unary function  
 
 In the file `tests/test_validate_text.py`.

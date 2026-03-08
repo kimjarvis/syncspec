@@ -1,91 +1,95 @@
-from src.syncspec.text import Text
-from src.syncspec.error import Error
-from src.syncspec.fragment import Fragment
-from src.syncspec.monad import Monad
 from typing import Union
+from src.syncspec.text import Text
+from src.syncspec.validated_text import ValidatedText
+from src.syncspec.error import Error
+from src.syncspec.validate_text_context import ValidateTextContext
 
 
-def validate_text(text: Text) -> Union[Fragment, Error]:
-    # Verify Monad State Existence
-    required_keys = ["open_delimiter", "close_delimiter", "name", "length", "index"]
-    if not all(k in Monad.state for k in required_keys):
-        return Error(message="Monad state missing required keys", name="", line_number=0)
+def make_validate_text(context: ValidateTextContext):
+    def validate_text(text: Text) -> Union[ValidatedText, Error]:
+        # Verify Context Configuration
+        if not isinstance(context.name, str) or not context.name:
+            return Error(message="Context name must be a non-empty Unicode string",
+                         name=context.name, line_number=context.line_number)
 
-    idx = Monad.state["index"]
-    length = Monad.state["length"]
-    name = Monad.state["name"]
-    open_d = Monad.state["open_delimiter"]
-    close_d = Monad.state["close_delimiter"]
+        open_d = context.open_delimiter
+        close_d = context.close_delimiter
 
-    # Verify Monad Bounds
-    if not (0 <= idx < length):
-        return Error(message=f"Invalid index {idx} for length {length}", name=name, line_number=0)
+        if not isinstance(open_d, str) or not isinstance(close_d, str):
+            return Error(message="Delimiters must be Unicode strings",
+                         name=context.name, line_number=context.line_number)
+        if not open_d or not close_d:
+            return Error(message="Delimiters cannot be empty",
+                         name=context.name, line_number=context.line_number)
+        if open_d == close_d:
+            return Error(message="Delimiters must be distinct",
+                         name=context.name, line_number=context.line_number)
+        if open_d in close_d or close_d in open_d:
+            return Error(message="Delimiters overlap structurally",
+                         name=context.name, line_number=context.line_number)
 
-    # Verify Delimiters
-    if not isinstance(open_d, str) or not isinstance(close_d, str):
-        return Error(message="Delimiters must be Unicode strings", name=name, line_number=0)
-    if not open_d or not close_d:
-        return Error(message="Delimiters cannot be empty", name=name, line_number=0)
-    if open_d == close_d:
-        return Error(message="Delimiters must be distinct", name=name, line_number=0)
-    if open_d in close_d or close_d in open_d:
-        return Error(message="Delimiters overlap structurally", name=name, line_number=0)
+        # Verify Text Type
+        if not isinstance(text.text, str):
+            return Error(message="Text must be a Unicode string",
+                         name=context.name, line_number=context.line_number)
 
-    # Verify Text Type
-    if not isinstance(text.text, str):
-        return Error(message="Text must be a Unicode string", name=name, line_number=0)
+        content = text.text
+        base_line = context.line_number
 
-    content = text.text
-    occurrences = []
+        # Find Delimiters
+        occurrences = []
+        start = 0
+        while start < len(content):
+            open_idx = content.find(open_d, start)
+            close_idx = content.find(close_d, start)
 
-    # Find all delimiter occurrences
-    start = 0
-    while start < len(content):
-        open_idx = content.find(open_d, start)
-        close_idx = content.find(close_d, start)
+            if open_idx == -1 and close_idx == -1:
+                break
 
-        if open_idx == -1 and close_idx == -1:
-            break
+            # Determine which comes first
+            if open_idx != -1 and (close_idx == -1 or open_idx < close_idx):
+                occurrences.append((open_idx, 'open'))
+                start = open_idx + len(open_d)
+            else:
+                occurrences.append((close_idx, 'close'))
+                start = close_idx + len(close_d)
 
-        if open_idx != -1 and (close_idx == -1 or open_idx < close_idx):
-            occurrences.append((open_idx, 'open'))
-            start = open_idx + len(open_d)
-        else:
-            occurrences.append((close_idx, 'close'))
-            start = close_idx + len(close_d)
+        if not occurrences:
+            return ValidatedText(text=content)
 
-    # Verify Text Structure
-    if not occurrences:
-        # 0 pairs is even (0 % 2 == 0), valid
-        return Fragment(text=content, line_number=content.count('\n') + 1)
+        # Verify Order: First must be Open
+        if occurrences[0][1] == 'close':
+            line = content[:occurrences[0][0]].count('\n') + base_line
+            return Error(message="Close delimiter appears before open delimiter",
+                         name=context.name, line_number=line)
 
-    # First delimiter must be open
-    if occurrences[0][1] == 'close':
-        line = content[:occurrences[0][0]].count('\n') + 1
-        return Error(message="Close delimiter appears before open delimiter", name=name, line_number=line)
+        # Verify Structure: Balance, Nesting, Even Pairs
+        stack = []
+        pair_count = 0
 
-    stack = []
-    pair_count = 0
+        for pos, dtype in occurrences:
+            line = content[:pos].count('\n') + base_line
 
-    for pos, dtype in occurrences:
-        line = content[:pos].count('\n') + 1
-        if dtype == 'open':
-            if stack:
-                return Error(message="Nested delimiters detected", name=name, line_number=line)
-            stack.append(line)
-        else:
-            if not stack:
-                return Error(message="Unbalanced close delimiter", name=name, line_number=line)
-            stack.pop()
-            pair_count += 1
+            if dtype == 'open':
+                if stack:
+                    return Error(message="Nested delimiters detected",
+                                 name=context.name, line_number=line)
+                stack.append(line)
+            else:
+                if not stack:
+                    return Error(message="Unbalanced close delimiter",
+                                 name=context.name, line_number=line)
+                stack.pop()
+                pair_count += 1
 
-    if stack:
-        return Error(message="Unclosed open delimiter", name=name, line_number=stack[0])
+        if stack:
+            return Error(message="Unclosed open delimiter",
+                         name=context.name, line_number=stack[0])
 
-    if pair_count % 2 != 0:
-        # Error on the last pair's close delimiter roughly, or just general
-        # Spec says "line number on which the error was detected".
-        # We detect this after parsing. Let's point to the last line.
-        return Error(message="Number of delimiter pairs must be even", name=name, line_number=content.count('\n') + 1)
+        if pair_count % 2 != 0:
+            return Error(message="Number of delimiter pairs must be even",
+                         name=context.name, line_number=base_line)
 
-    return Fragment(text=content, line_number=content.count('\n') + 1)
+        return ValidatedText(text=content)
+
+    return validate_text

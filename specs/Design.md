@@ -6,7 +6,7 @@ Performs all validation.
 ### Fragment Text
 
 Returns Fragment objects.
-### Generate Blocks
+### Create Blocks
 
 Returns objects of  types, String, Block.
 ### Process Source Blocks
@@ -72,10 +72,11 @@ class String:
 Import this class from file `src/syncspec/block.py`:
 ```python
 from dataclasses import dataclass
+from typing import Dict, Any
 
 @dataclass
 class Block:
-    directive: str  
+    directive: Dict[str, Any]  
     text: str
     line_number: int    
 ```

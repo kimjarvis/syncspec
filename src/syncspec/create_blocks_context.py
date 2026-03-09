@@ -7,3 +7,4 @@ class CreateBlocksContext:
 	top_directive: str
 	text: str
 	line_number: int
+	name: str

@@ -3,6 +3,18 @@
 ## Functional specification
 
 
+Import this class from file `src/syncspec/error.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Error:
+    message: str
+    name: str
+    line_number: int
+```
+
+
 Import this class from file `src/syncspec/fragment.py`:
 ```python
 from dataclasses import dataclass
@@ -30,9 +42,12 @@ from typing import Dict, Any
 
 @dataclass
 class Block:
+    directive: Dict[str, Any]  
+    combined_directives: str
     text: str
     line_number: int    
 ```
+
 
 
 Import this class from file `src/syncspec/create_blocks_context.py`:
@@ -46,6 +61,7 @@ class CreateBlocksContext:
 	top_directive: str
 	text: str
 	line_number: int
+	name: str
 ```
 
 Do not generate code to initialise the context.
@@ -78,9 +94,15 @@ If index mod 4 equals 1 then return None.
 If index mod 4 equals 2 then return None.
 - Copy the fragment text into `CreateBlocksContext.text`
 
-If index mod 4 equals 3 then return an object of type Block.
-- Concatenate `top_directive` and fragment text and store it in `Block.text` 
+If index mod 4 equals 3 then return an object of type Block or Error.
+- Copy  `CreateBlocksContext.text` and store it in `Block.text`
 - Copy the context line_number into the Block.
+- Concatenate "{ " + `top_directive` + " " + fragment text + " }"and store it in `Block.combined_directives`
+- Interpret Block.combined_directives as a JSON.  Convert it into a dictionary and store in `Block.directive`.
+- If an error occurs converting the string to JSON return an object of type Error, otherwise return an object of type Block.
+- Copy the context line_number and name from the context into Error and add an informative text message.
+
+
 
 ## Package
 

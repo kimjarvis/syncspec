@@ -57,9 +57,9 @@ def production(facts, rules, halt=Stop):
             raise RuntimeError("Exceeded 10 iterations without stabilization")
 
         return facts
-    except (Error, halt) as e:
-        print(f"{type(e).__name__}: {e.message}")
-        return facts
+    # except (Error, halt) as e:
+    #     print(f"{type(e).__name__}: {e.message}")
+    #     return facts
     except Exception as e:
         print(f"Error: {e}")
         return facts

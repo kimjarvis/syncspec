@@ -77,6 +77,20 @@ from typing import Dict, Any
 @dataclass
 class Block:
     directive: Dict[str, Any]  
+    combined_directives: str
+    text: str
+    line_number: int    
+```
+
+
+Import this class from file `src/syncspec/source.py`:
+```python
+from dataclasses import dataclass
+from typing import Dict, Any
+
+@dataclass
+class Source:
+    directive: Dict[str, Any]  
     text: str
     line_number: int    
 ```
@@ -95,15 +109,5 @@ class Monad:
     state: ClassVar[Dict[str, Dict[str, Any]]] = {}
 ```
 
-Monad is initialised with values.  For example:
-```python
-    Monad.state["open_delimiter"] = "{{"
-    Monad.state["close_delimiter"] = "}}"
-    Monad.state["name"] = "test"
-    Monad.state["length"]
-    Monad.state["index"]
-```
-- When  `Monad.state["index"] == 0` we call this the first function call.
-- When  `Monad.state["index"] + 1 == Monad.state["length"]` we call this the last function call.
 
 

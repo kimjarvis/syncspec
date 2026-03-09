@@ -2,8 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, Any
 
 @dataclass
-class Block:
+class Source:
     directive: Dict[str, Any]
-    combined_directives: str
     text: str
     line_number: int

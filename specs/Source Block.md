@@ -2,27 +2,26 @@
 
 ## Functional specification
 
-Import this class from file `src/syncspec/block.py`:
+Import this class from file `src/syncspec/string.py`:
 ```python
 from dataclasses import dataclass
-from typing import Dict, Any
 
 @dataclass
-class Block:
-    directive: Dict[str, Any]  
-    combined_directives: str
+class String:
     text: str
     line_number: int    
 ```
 
-Import this class from file `src/syncspec/source.py`:
+Import this class from file `src/syncspec/block.py`:
 ```python
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 @dataclass
-class Source:
+class Block:
     directive: Dict[str, Any]  
+    prefix: Optional[str]
+    suffix: str
     text: str
     line_number: int    
 ```
@@ -34,9 +33,12 @@ from typing import ClassVar, Dict, Any
 
 @dataclass
 class SourceBlockContext:
-    state: ClassVar[Dict[str, Any]]
+    state: Dict[str, Any]
+    open_delimiter: str
+    close_delimiter: str    
 ```
 
+Do not generate code to initialise the context.
 ### Implement the unary function Source Block
 
 In the file `src/syncspec/source_block.py`.
@@ -45,16 +47,29 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_source_block(context: SourceBlockContext):	
-	def create_blocks(block: Block) -> Union[Source, Block]:
+	def source_block(block: Block) -> Union[String, Block]:
 ```
 
-If dictionary `Block.directive` contains a key "source" return an object of type Source:
-- Copy `Block.line_number` to Source.
-- Copy `Block.text` to Source.
+If dictionary `Block.directive` contains a key "source" then:
+
+Return an object of type String:
+- Copy `line_number` from Block.
+- Concatenate these strings in order to create `String.text`:
+
+1. `SourceBlockContext.open_delimiter`
+2. `block.prefix`
+3. `SourceBlockContext.close_delimiter`
+4. `block.text`
+5. `SourceBlockContext.open_delimiter`
+6. `block.suffix`
+7. `SourceBlockContext.close_delimiter`
+
+And add a key value pair to the `SourceBlockContext.state` dictionary:
 - value shall be the value associated with the key "source".
 - Store `Block.text` in `SourceBlockContext.state[value]` .
 
-If dictionary `Block.directive` does not contains a key "source" return an object of type Block:
+
+If dictionary `Block.directive` does not contains a key "source" then return an object of type Block:
 - Return the input parameter unchanged.
 
 ## Test the unary function  

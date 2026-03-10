@@ -39,6 +39,8 @@ def main():
     monad={}
     sbc = SourceBlockContext(
         state=monad,
+        open_delimiter="{{",
+        close_delimiter="}}",
     )
     csc = CombineStringsContext(
         text="",
@@ -54,7 +56,7 @@ def main():
     facts = [Text("""A{{"source": "first"}}C{{}}E{{"include": "first"}}G{{}}I""")]
 
     # 3. Build Rules
-    rules = build_rules([validate_text,fragment_text,create_blocks, combine_strings])
+    rules = build_rules([validate_text,fragment_text,create_blocks, source_block, combine_strings])
 
     # 4. Run Production (no context passed)
     result = production(facts, rules, Stop)

@@ -1,17 +1,23 @@
-from typing import Union, Dict, Any
+from typing import Union
+from .string import String
 from .block import Block
-from .source import Source
 from .source_block_context import SourceBlockContext
 
 def make_source_block(context: SourceBlockContext):
-    def create_blocks(block: Block) -> Union[Source, Block]:
+    def source_block(block: Block) -> Union[String, Block]:
         if "source" in block.directive:
-            value = block.directive["source"]
-            context.state[value] = block.text
-            return Source(
-                directive=block.directive,
-                text=block.text,
-                line_number=block.line_number
+            key = block.directive["source"]
+            context.state[key] = block.text
+            prefix = block.prefix or ""
+            text = (
+                context.open_delimiter +
+                prefix +
+                context.close_delimiter +
+                block.text +
+                context.open_delimiter +
+                block.suffix +
+                context.close_delimiter
             )
+            return String(text=text, line_number=block.line_number)
         return block
-    return create_blocks
+    return source_block

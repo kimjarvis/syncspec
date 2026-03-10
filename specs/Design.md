@@ -73,16 +73,6 @@ class Block:
     line_number: int    
 ```
 
-Import this class from file `src/syncspec/source.py`:
-```python
-from dataclasses import dataclass
-from typing import Dict, Any
-
-@dataclass
-class Source(Block):
-	pass
-```
-
 Import this class from file `src/syncspec/string.py`:
 ```python
 from dataclasses import dataclass

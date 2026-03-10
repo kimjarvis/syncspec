@@ -1,5 +1,3 @@
-from src.syncspec.error import Error
-from src.syncspec.stop import Stop
 import inspect
 from typing import get_type_hints
 
@@ -13,8 +11,6 @@ def production(facts, rules):
     for rule_type, fn in rules:
         new_facts = []
         for fact in facts:
-            if isinstance(fact, (Error, Stop)):
-                raise fact
             if isinstance(fact, rule_type):
                 res = fn(fact)
                 new_facts.extend(res) if isinstance(res, (list, tuple)) else new_facts.append(res)

@@ -11,11 +11,11 @@ Returns Fragment objects.
 Returns objects of  types, String, Block.
 ### Process Source Blocks
 
-Populate the dictionary with from blocks of type source.
+Populate the dictionary from blocks of type source.
 ### Process Include Blocks
 
 Use the dictionary to create blocks of type include.
-### Combine Blocks
+### Block to String
 
 Combines the blocks to produce the output text.
 ## Classes

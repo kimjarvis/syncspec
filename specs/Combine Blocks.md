@@ -3,15 +3,6 @@
 ## Functional specification
 
 
-Import this class from file `src/syncspec/stop.py`:
-```python
-from dataclasses import dataclass
-
-@dataclass
-class Stop:
-    message: str
-```
-
 Import this class from file `src/syncspec/block.py`:
 ```python
 from dataclasses import dataclass
@@ -22,6 +13,16 @@ class Block:
     directive: Dict[str, Any]  
     prefix: Optional[str]
     suffix: str
+    text: str
+    line_number: int    
+```
+
+Import this class from file `src/syncspec/string.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class String:
     text: str
     line_number: int    
 ```
@@ -40,8 +41,6 @@ class CombineBlocksContext:
 
 Do not generate code to initialise the context.
 
-
-
 ### Implement the unary function Combine Blocks
 
 In the file `src/syncspec/combine_blocks.py`.
@@ -50,10 +49,8 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_combine_blocks(context: CombineBlocksContext):	
-	def combine_blocks(block: Block) -> Stop
+	def combine_blocks(block: Block) -> String
 ```
-
-If the parent class of the parameter block is Block:
 
 If `block.prefix` is None:
 -  Append `block.text` to the end of string `CombineBlocksContext.text`.

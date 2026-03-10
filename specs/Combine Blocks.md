@@ -27,13 +27,13 @@ class String:
     line_number: int    
 ```
 
-Import this class from file `src/syncspec/combine_blocks_context.py`:
+Import this class from file `src/syncspec/combine_strings_context.py`:
 ```python
 from dataclasses import dataclass, field
 from typing import Any, Dict
 
 @dataclass
-class CombineBlocksContext:
+class CombineStringsContext:
 	text: str
     open_delimiter: str
     close_delimiter: str	

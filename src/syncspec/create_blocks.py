@@ -1,47 +1,47 @@
 from typing import Union, Dict, Any
-import json
-import yaml
-
 from src.syncspec.error import Error
 from src.syncspec.fragment import Fragment
 from src.syncspec.block import Block
 from src.syncspec.string import String
 from src.syncspec.create_blocks_context import CreateBlocksContext
+import json
+import yaml
 
 
 def _parse_to_dict(text: str) -> Dict[str, Any]:
-    """Parse text as JSON or YAML, wrapping in braces if necessary."""
+    """Parse text as JSON or YAML, with brace wrapping fallback."""
     if not text or not text.strip():
-        return {}
+        raise ValueError("Empty text")
 
     candidates = [text, f"{{{text}}}"]
-
     for candidate in candidates:
-        # Try JSON first (stricter)
+        # Try JSON first
         try:
-            data = json.loads(candidate)
-            if isinstance(data, dict):
-                if any(k is None or not isinstance(k, str) for k in data.keys()):
-                    continue
-                return data
-        except (json.JSONDecodeError, ValueError):
+            res = json.loads(candidate)
+            if isinstance(res, dict):
+                if None in res:
+                    raise ValueError("None keys not allowed")
+                if len(res) == 0:
+                    raise ValueError("Empty dict not allowed")
+                return {str(k): v for k, v in res.items()}
+        except Exception:
             pass
 
-        # Try YAML only if it looks like structured data
+        # Try YAML
         try:
-            # Reject bare strings that aren't structured
-            if ":" not in candidate and "{" not in candidate and "[" not in candidate:
+            res = yaml.safe_load(candidate)
+            if isinstance(res, dict):
+                if None in res:
+                    raise ValueError("None keys not allowed")
+                if len(res) == 0:
+                    raise ValueError("Empty dict not allowed")
+                # Check if values are all None (indicates bare word parsing)
+                if all(v is None for v in res.values()):
+                    raise ValueError("Invalid YAML structure")
+                return {str(k): v for k, v in res.items()}
+            elif res is None:
                 continue
-
-            data = yaml.safe_load(candidate)
-            if isinstance(data, dict):
-                if any(k is None or not isinstance(k, str) for k in data.keys()):
-                    continue
-                # Reject if all values are None (bare string parsed as mapping)
-                if len(data) > 0 and all(v is None for v in data.values()):
-                    continue
-                return data
-        except (yaml.YAMLError, Exception):
+        except Exception:
             continue
 
     raise ValueError(f"Invalid JSON/YAML: {text}")
@@ -50,35 +50,28 @@ def _parse_to_dict(text: str) -> Dict[str, Any]:
 def make_create_blocks(context: CreateBlocksContext):
     def create_blocks(fragment: Fragment) -> Union[Block, String, None, Error]:
         state = context.index % 4
+        res = None
 
         try:
             if state == 0:
-                return String(text=fragment.text, line_number=fragment.line_number)
+                res = String(fragment.text, fragment.line_number, fragment.name)
             elif state == 1:
                 context.prefix = fragment.text
                 context.line_number = fragment.line_number
-                return None
             elif state == 2:
                 context.text = fragment.text
-                return None
             elif state == 3:
-                prefix_dict = _parse_to_dict(context.prefix)
-                suffix_dict = _parse_to_dict(fragment.text)
-                directive = {**prefix_dict, **suffix_dict}
-                return Block(
-                    directive=directive,
-                    prefix=context.prefix,
-                    suffix=fragment.text,
-                    text=context.text,
-                    line_number=context.line_number
-                )
+                p_dict = _parse_to_dict(context.prefix)
+                s_dict = _parse_to_dict(fragment.text)
+                directive = p_dict | s_dict
+                res = Block(directive, context.prefix, fragment.text, context.text, context.line_number, fragment.name)
         except Exception as e:
-            return Error(
-                message=str(e),
-                name=context.name,
-                line_number=context.line_number
-            )
-        finally:
-            context.index += 1
+            if state == 3:
+                res = Error(str(e), fragment.name, context.line_number)
+            else:
+                raise
+
+        context.index += 1
+        return res
 
     return create_blocks

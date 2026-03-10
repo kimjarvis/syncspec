@@ -59,7 +59,7 @@ def main():
     rules = build_rules([validate_text,fragment_text,create_blocks, source_block, combine_strings])
 
     # 4. Run Production (no context passed)
-    result = production(facts, rules, Stop)
+    result = production(facts, rules)
     pprint.pp(result)
     pprint.pp(monad)
     pprint.pp(csc)

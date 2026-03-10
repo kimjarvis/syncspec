@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from src.syncspec.test import Text
 from src.syncspec.error import Error
 
 

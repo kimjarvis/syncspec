@@ -59,16 +59,6 @@ class Fragment:
     line_number: int
 ```
 
-Import this class from file `src/syncspec/string.py`:
-```python
-from dataclasses import dataclass
-
-@dataclass
-class String:
-    text: str
-    line_number: int    
-```
-
 Import this class from file `src/syncspec/block.py`:
 ```python
 from dataclasses import dataclass
@@ -77,11 +67,11 @@ from typing import Dict, Any
 @dataclass
 class Block:
     directive: Dict[str, Any]  
-    combined_directives: str
+    prefix: str
+    suffix: str
     text: str
     line_number: int    
 ```
-
 
 Import this class from file `src/syncspec/source.py`:
 ```python
@@ -89,25 +79,10 @@ from dataclasses import dataclass
 from typing import Dict, Any
 
 @dataclass
-class Source:
-    directive: Dict[str, Any]  
-    text: str
-    line_number: int    
+class Source(Block):
+	pass
 ```
 
-## Monad
-
-Class Monad preserves state between function calls in a dictionary.
-
-Import this class from file `src/syncspec/monad.py`:
-```python
-from dataclasses import dataclass
-from typing import ClassVar, Dict, Any
-
-@dataclass
-class Monad:
-    state: ClassVar[Dict[str, Dict[str, Any]]] = {}
-```
 
 
 

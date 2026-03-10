@@ -4,7 +4,7 @@ from typing import Any, Dict
 @dataclass
 class CreateBlocksContext:
 	index: int
-	top_directive: str
+	prefix: str
 	text: str
 	line_number: int
 	name: str

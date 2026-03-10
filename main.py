@@ -29,7 +29,7 @@ def main():
     cbc = CreateBlocksContext(
         name="test",
         index=0,
-        top_directive="",
+        prefix="",
         text="",
         line_number=1,
     )
@@ -48,7 +48,7 @@ def main():
     facts = [Text("""A{{"source": "first"}}C{{}}E{{"include": "first"}}G{{}}I""")]
 
     # 3. Build Rules
-    rules = build_rules([validate_text,fragment_text,create_blocks,source_block])
+    rules = build_rules([validate_text,fragment_text,create_blocks])
 
     # 4. Run Production (no context passed)
     result = production(facts, rules, Stop)

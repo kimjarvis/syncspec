@@ -27,6 +27,7 @@ from dataclasses import dataclass
 @dataclass
 class Text:
     text: str
+    name: str
 ```
 
 Import this class from file `src/syncspec/validated_text.py`:
@@ -36,6 +37,7 @@ from dataclasses import dataclass
 @dataclass
 class ValidatedText:
     text: str
+    name: str    
 ```
 
 Import this class from file `src/syncspec/error.py`:

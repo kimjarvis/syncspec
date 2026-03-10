@@ -9,6 +9,7 @@ from dataclasses import dataclass
 @dataclass
 class Text:
     text: str
+    name: str
 ```
 
 Import this class from file `src/syncspec/validated_text.py`:
@@ -18,6 +19,7 @@ from dataclasses import dataclass
 @dataclass
 class ValidatedText:
     text: str
+    name: str
 ```
 
 Import this class from file `src/syncspec/error.py`:
@@ -38,12 +40,12 @@ from typing import Any, Dict
 
 @dataclass
 class ValidateTextContext:
-    name: str
     open_delimiter: str
     close_delimiter: str
     line_number: int    
 ```
 
+Do not generate code to initialise the context.
 ### Implement the unary function Validate Text
 
 In the file `src/syncspec/validate_text.py`.
@@ -61,16 +63,14 @@ def make_validate_text(context: ValidateTextContext):
 
 #### Ensure that:
 
-- The required fields exist within the context.state `["open_delimiter", "close_delimiter", "name"]`
 - Delimiters are valid Unicode strings.
 - Delimiters are not empty strings.
 - Delimiters are distinct, e.g., they will not be `{{` and `{{`.
 - Delimiters do not overlap structurally, , e.g., they will not be `{{` and `{`. 
-- name is a valid unicode string.
 #### Assume that:
 
 - The context is instantiated before the factory is called.
-- Delimiters may contain regex special characters  e.g., `*`.
+- Delimiters may contain regex special characters  e.g., `*`.  Delimiters are treated as literal strings using `str.find` rather than compiled regex patterns.
 - The text has POSIX line endings  e.t.,`\n`.
 
 ### Keep track of line numbers
@@ -80,6 +80,7 @@ def make_validate_text(context: ValidateTextContext):
 - The line number reported when class Error is returned is the line number where the error was detected. 
 - The line number is part of the context shared across multiple calls.
 - The line number acts as a global offset. 
+- "line_number" is based on total newlines in the input even when returning an Error.
 ### Verify the text
 
 #### Ensure that:
@@ -99,10 +100,12 @@ def make_validate_text(context: ValidateTextContext):
 Requiring an even number of delimiter pairs is a specific requirement for this application.
 ### Error return
 
-When any of the conditions are violated return object of type Error with an informative message, a copy of the name and the line number on which the error was detected.
+Raise a ValueError during factory creation for configuration errors.
+
+Return Error objects for text validation failures.  When any of the validation conditions are violated return object of type Error with an informative message, a copy of the `Text.name` and the line number on which the error was detected.
 ### Successful return
 
-Return ValidatedText object.  Copy the Text.text field to ValidatedText.text.
+Return a `ValidatedText` object.  Copy the `Text.text` field to `ValidatedText.text`.
 ## Package
 
 `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.

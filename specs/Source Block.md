@@ -72,6 +72,9 @@ And add a key value pair to the `SourceBlockContext.state` dictionary:
 If dictionary `Block.directive` does not contains a key "source" then return an object of type Block:
 - Return the input parameter unchanged.
 
+## Package
+
+`src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
 ## Test the unary function  
 
 In the file `tests/test_source_block.py`.

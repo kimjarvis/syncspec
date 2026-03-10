@@ -72,7 +72,6 @@ def make_validate_text(context: ValidateTextContext):
 - The context is instantiated before the factory is called.
 - Delimiters may contain regex special characters  e.g., `*`.
 - The text has POSIX line endings  e.t.,`\n`.
-- src/syncspec is a Python package.
 
 ### Keep track of line numbers
 
@@ -104,6 +103,9 @@ When any of the conditions are violated return object of type Error with an info
 ### Successful return
 
 Return ValidatedText object.  Copy the Text.text field to ValidatedText.text.
+## Package
+
+`src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
 ## Test the unary function  
 
 In the file `tests/test_validate_text.py`.

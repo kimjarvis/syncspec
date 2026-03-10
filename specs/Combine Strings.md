@@ -35,6 +35,10 @@ def make_combine_strings(context: CombineStringsContext):
 ```
 
  - Append `String.text` to the end of string `CombineStringsContext.text`.
+
+## Package
+
+`src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
 ## Test the unary function  
 
 In the file `tests/test_combine_strings.py`.

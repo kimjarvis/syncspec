@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional
 @dataclass
 class Block:
     directive: Dict[str, Any]
-    prefix: Optional[str]
+    prefix: str
     suffix: str
     text: str
-    line_number: int
+    line_number: int    

@@ -83,6 +83,14 @@ class Source(Block):
 	pass
 ```
 
+Import this class from file `src/syncspec/string.py`:
+```python
+from dataclasses import dataclass
 
+@dataclass
+class String:
+    text: str
+    line_number: int    
+```
 
 

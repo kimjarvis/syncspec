@@ -2,56 +2,74 @@
 
 ## Functional specification
 
+
+Import this class from file `src/syncspec/stop.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Stop:
+    message: str
+```
+
 Import this class from file `src/syncspec/block.py`:
 ```python
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 @dataclass
 class Block:
     directive: Dict[str, Any]  
-    prefix: str
+    prefix: Optional[str]
     suffix: str
     text: str
     line_number: int    
 ```
 
-Import this class from file `src/syncspec/create_blocks_context.py`:
+Import this class from file `src/syncspec/combine_blocks_context.py`:
 ```python
 from dataclasses import dataclass, field
 from typing import Any, Dict
 
 @dataclass
 class CombineBlocksContext:
-	index: int
 	text: str
+    open_delimiter: str
+    close_delimiter: str	
 ```
 
 Do not generate code to initialise the context.
 
-Assume that:
-
-- Index is initialised to zero.
 
 
 ### Implement the unary function Combine Blocks
 
 In the file `src/syncspec/combine_blocks.py`.
 
-Define a unary function with signature:
+Define a closure factory with a unary function with signature:
 
 ```python
-def combine_blocks(parameter: Parameters) -> Response | Error:
+def make_combine_blocks(context: CombineBlocksContext):	
+	def combine_blocks(block: Block) -> Stop
 ```
 
-### Ensure that
+If the parent class of the parameter block is Block:
 
-- Rule
+If `block.prefix` is None:
+-  Append `block.text` to the end of string `CombineBlocksContext.text`.
+If `block.prefix` is not None, append these fields, in order, to the end of to string `CombineBlocksContext.text`:
+1. `CombineBlocksContext.open_delimiter`
+2. `block.prefix`
+3. `CombineBlocksContext.close_delimiter`
+4. `block.text`
+5. `CombineBlocksContext.open_delimiter`
+6. `block.suffix`
+7. `CombineBlocksContext.close_delimiter`
 
-### Assume that
+Return an object of class Stop with message string "stopping".
 
-- Assumption
-
+If the parent class of the parameter block is not Block:
+- Return the object block.
 ## Test the unary function  
 
 In the file `tests/test_combine_blocks.py`.

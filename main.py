@@ -19,19 +19,16 @@ import pprint
 
 def main():
     vtc = ValidateTextContext(
-        name="test",
         open_delimiter="{{",
         close_delimiter="}}",
         line_number=1
     )
     ftc = FragmentTextContext(
-        name="test",
         open_delimiter="{{",
         close_delimiter="}}",
         line_number=1
     )
     cbc = CreateBlocksContext(
-        name="test",
         index=0,
         prefix="",
         text="",
@@ -60,10 +57,11 @@ def main():
     include_block = make_include_block(ibc)
     combine_strings = make_combine_strings(csc)
 
-    facts = [Text("""A{{"source": "first"}}C{{}}E{{"include": "first"}}{{}}I""")]
+    facts = [Text(name="freddy",text="""A{{"source": "first"}}C{{}}E{{"include": "first"}}{{}}I""")]
 
     # 3. Build Rules
-    rules = build_rules([validate_text,fragment_text,create_blocks, source_block, include_block, combine_strings])
+    #rules = build_rules([validate_text,fragment_text,create_blocks, source_block, include_block, combine_strings])
+    rules = build_rules([validate_text,fragment_text,create_blocks ])
 
     # 4. Run Production (no context passed)
     result = production(facts, rules)

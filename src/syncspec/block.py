@@ -7,4 +7,5 @@ class Block:
     prefix: str
     suffix: str
     text: str
-    line_number: int    
+    line_number: int
+    name: str

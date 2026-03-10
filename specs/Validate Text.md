@@ -67,6 +67,7 @@ def make_validate_text(context: ValidateTextContext):
 - Delimiters are not empty strings.
 - Delimiters are distinct, e.g., they will not be `{{` and `{{`.
 - Delimiters do not overlap structurally, , e.g., they will not be `{{` and `{`. 
+- Delimiters do not contain newlines.
 #### Assume that:
 
 - The context is instantiated before the factory is called.

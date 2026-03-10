@@ -59,6 +59,7 @@ from dataclasses import dataclass
 class Fragment:  
     text: str
     line_number: int
+    name: str    
 ```
 
 Import this class from file `src/syncspec/block.py`:

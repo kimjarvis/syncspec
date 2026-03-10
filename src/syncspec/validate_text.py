@@ -6,90 +6,70 @@ from src.syncspec.validate_text_context import ValidateTextContext
 
 
 def make_validate_text(context: ValidateTextContext):
+    open_d, close_d = context.open_delimiter, context.close_delimiter
+
+    if not isinstance(open_d, str) or not open_d:
+        raise ValueError("Open delimiter must be a non-empty string.")
+    if not isinstance(close_d, str) or not close_d:
+        raise ValueError("Close delimiter must be a non-empty string.")
+    if open_d == close_d:
+        raise ValueError("Delimiters must be distinct.")
+    if open_d in close_d or close_d in open_d:
+        raise ValueError("Delimiters must not overlap structurally.")
+
     def validate_text(text: Text) -> Union[ValidatedText, Error]:
-        # Verify Context Configuration
-        if not isinstance(context.name, str) or not context.name:
-            return Error(message="Context name must be a non-empty Unicode string",
-                         name=context.name, line_number=context.line_number)
-
-        open_d = context.open_delimiter
-        close_d = context.close_delimiter
-
-        if not isinstance(open_d, str) or not isinstance(close_d, str):
-            return Error(message="Delimiters must be Unicode strings",
-                         name=context.name, line_number=context.line_number)
-        if not open_d or not close_d:
-            return Error(message="Delimiters cannot be empty",
-                         name=context.name, line_number=context.line_number)
-        if open_d == close_d:
-            return Error(message="Delimiters must be distinct",
-                         name=context.name, line_number=context.line_number)
-        if open_d in close_d or close_d in open_d:
-            return Error(message="Delimiters overlap structurally",
-                         name=context.name, line_number=context.line_number)
-
-        # Verify Text Type
         if not isinstance(text.text, str):
-            return Error(message="Text must be a Unicode string",
-                         name=context.name, line_number=context.line_number)
+            context.line_number += 0
+            return Error("Text must be a valid Unicode string.", text.name, context.line_number)
 
+        start_line = context.line_number
         content = text.text
-        base_line = context.line_number
+        pos = 0
+        state = 0  # 0: Outside, 1: Inside
+        pairs = 0
+        len_open, len_close = len(open_d), len(close_d)
 
-        # Find Delimiters
-        occurrences = []
-        start = 0
-        while start < len(content):
-            open_idx = content.find(open_d, start)
-            close_idx = content.find(close_d, start)
+        while pos <= len(content):
+            idx_open = content.find(open_d, pos)
+            idx_close = content.find(close_d, pos)
 
-            if open_idx == -1 and close_idx == -1:
+            if idx_open == -1 and idx_close == -1:
                 break
 
-            # Determine which comes first
-            if open_idx != -1 and (close_idx == -1 or open_idx < close_idx):
-                occurrences.append((open_idx, 'open'))
-                start = open_idx + len(open_d)
+            if idx_open != -1 and (idx_close == -1 or idx_open < idx_close):
+                next_idx, is_open = idx_open, True
+                span = len_open
             else:
-                occurrences.append((close_idx, 'close'))
-                start = close_idx + len(close_d)
+                next_idx, is_open = idx_close, False
+                span = len_close
 
-        if not occurrences:
-            return ValidatedText(text=content)
-
-        # Verify Order: First must be Open
-        if occurrences[0][1] == 'close':
-            line = content[:occurrences[0][0]].count('\n') + base_line
-            return Error(message="Close delimiter appears before open delimiter",
-                         name=context.name, line_number=line)
-
-        # Verify Structure: Balance, Nesting, Even Pairs
-        stack = []
-        pair_count = 0
-
-        for pos, dtype in occurrences:
-            line = content[:pos].count('\n') + base_line
-
-            if dtype == 'open':
-                if stack:
-                    return Error(message="Nested delimiters detected",
-                                 name=context.name, line_number=line)
-                stack.append(line)
+            if is_open:
+                if state == 1:
+                    err_line = start_line + content[:next_idx].count('\n')
+                    context.line_number = start_line + content.count('\n')
+                    return Error("Nested open delimiter detected.", text.name, err_line)
+                state = 1
             else:
-                if not stack:
-                    return Error(message="Unbalanced close delimiter",
-                                 name=context.name, line_number=line)
-                stack.pop()
-                pair_count += 1
+                if state == 0:
+                    err_line = start_line + content[:next_idx].count('\n')
+                    context.line_number = start_line + content.count('\n')
+                    return Error("Close delimiter found before open delimiter.", text.name, err_line)
+                state = 0
+                pairs += 1
 
-        if stack:
-            return Error(message="Unclosed open delimiter",
-                         name=context.name, line_number=stack[0])
+            pos = next_idx + span
 
-        if pair_count % 2 != 0:
-            return Error(message="Number of delimiter pairs must be even",
-                         name=context.name, line_number=base_line)
+        if state == 1:
+            err_line = start_line + content.count('\n')
+            context.line_number = err_line
+            return Error("Unclosed open delimiter.", text.name, err_line)
 
-        return ValidatedText(text=content)
+        if pairs % 2 != 0:
+            err_line = start_line + content.count('\n')
+            context.line_number = err_line
+            return Error("Number of delimiter pairs must be even.", text.name, err_line)
+
+        context.line_number = start_line + content.count('\n')
+        return ValidatedText(text=text.text, name=text.name)
 
     return validate_text

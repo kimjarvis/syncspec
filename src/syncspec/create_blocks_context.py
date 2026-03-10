@@ -7,4 +7,3 @@ class CreateBlocksContext:
 	prefix: str
 	text: str
 	line_number: int
-	name: str

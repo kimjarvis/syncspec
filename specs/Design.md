@@ -1,24 +1,24 @@
-## Functions
+# Functions
 
-### Validate Text  
+### [[Validate Text]]  
 
 Performs all validation.
-### Fragment Text
+### [[Fragment Text]]
 
 Returns Fragment objects.
-### Create Blocks
+### [[Create Blocks]]
 
 Returns objects of  types, String, Block.
-### Process Source Blocks
+### [[Source Block]]
 
-Populate the dictionary from blocks of type source.
-### Process Include Blocks
+Populate the dictionary from blocks of type source.  Converts a block of type Source into a String.
+### [[Include Block]]
 
-Use the dictionary to create blocks of type include.
-### Block to String
+Use the dictionary to create blocks of type include.  Converts a block of type Include into a String.
+### [[Combine Strings]]
 
-Combines the blocks to produce the output text.
-## Classes
+Combines the Strings to produce the output text.
+# Classes
 
 Import this class from file `src/syncspec/text.py`:
 ```python

@@ -137,11 +137,11 @@ def make_syncspec(context: SyncspecContext):
 
 - The context parameters are used to set the delimiters.
 - The context objects are shared by each iteration.
-- The function takes a list of Text and uses them as facts.  It applies the facts and rules to each Text object.  The result is a string.  This shall be converted back into a Text object and returned.
-- `log_file` must be a valid file path.  The file should not exist.
-- `graph_file` must be a valid file path.  The file suffix must be `.dot`  . The file should not exist.
+- The production function applies rules to each Text object in the list.  
+- The resulting text is gathered in `CombineStringsContext.text` 
 - Logging information is collected in `CombineErrorsContext.text` it shall be written to the file `log_file`.
-- The graph shall be written to the file `graph_file`.  
+- The graph is collected in `CombineNodesContext` is shall be written to the file `graph_file`. 
+- The function can assume that the file paths are valid. 
 #### main
 
 Generate a main function in file `main1.py` the main function shall parse keyword parameters:
@@ -152,9 +152,16 @@ Generate a main function in file `main1.py` the main function shall parse keywor
 `--output` required.   
 And required positional parameter `path`  
 
+#### Validate the parameters
+
+- `--log_file` must be a valid file path.  The file should not exist.
+- `--graph_file` must be a valid file path.  The file suffix must be `.dot`  . The file should not exist.
 - Verify that output is a path to an existing directory.
 - Verify that path is a path to an existing directory.
-- Construct the syncspec context from the parameters.
+
+Print an informative error message and stop if verification fails.
+
+Construct the syncspec context from the parameters.
 
 Traverse the directory `path` recursively.  For each markdown  `.md` file encountered create an object of type `Text` and add it to a list.  `Text.text` shall be the file content.  `Text.name` shall be the file path relative to `path`.
 

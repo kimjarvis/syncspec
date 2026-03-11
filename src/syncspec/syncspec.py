@@ -36,14 +36,21 @@ def make_syncspec(context: SyncspecContext):
         graph = nx.DiGraph()
         cnc = CombineNodesContext(graph)
 
-        funcs = [
-            make_validate_text(vtc), make_fragment_text(ftc), make_create_blocks(cbc),
-            make_source_block(sbc), make_include_block(ibc), make_combine_strings(csc),
-            make_combine_errors(cec), make_combine_nodes(cnc)
-        ]
-        rules = build_rules(funcs)
-        result = production(texts, rules)
+        # funcs = [
+        #     make_validate_text(vtc), make_fragment_text(ftc), make_create_blocks(cbc),
+        #     make_source_block(sbc), make_include_block(ibc), make_combine_strings(csc),
+        #     make_combine_errors(cec), make_combine_nodes(cnc)
+        # ]
 
+
+        funcs = [
+            make_validate_text(vtc), make_fragment_text(ftc), make_create_blocks(cbc)
+        ]
+
+
+        rules = build_rules(funcs)
+
+        result = production(texts, rules)
         # Write logs and graph
         Path(context.log_file).write_text(cec.text)
         nx.drawing.nx_pydot.write_dot(graph, context.graph_file)

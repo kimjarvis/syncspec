@@ -28,7 +28,9 @@ def main():
     for file in src_path.rglob("*.md"):
         texts.append(Text(name=str(file.relative_to(src_path)), text=file.read_text()))
 
+    print(texts)
     results = syncspec(texts)
+    print(results)
 
     for res in results:
         dest = out_path / res.name

@@ -52,6 +52,7 @@ def main():
     )
     csc = CombineStringsContext(
         text="",
+        name="",
     )
     cec = CombineErrorsContext(
         text="",
@@ -71,13 +72,19 @@ def main():
     combine_errors = make_combine_errors(cec)
     combine_nodes = make_combine_nodes(cnc)
 
-    facts = [Text(name="freddy", text="""A{{"source": "first"}}C{{}}
-    E{{"include": "first"}}{{}}I""")]
+    facts = [Text(name="freddy", text="""line 1
+    {{"source": "a"}}A{{}}
+    {{"source": "b"}}B{{}}
+    line 2
+    {{"include": "a"}}{{}} 
+    {{"include": "b"}}{{}}
+    line 3"""),
+    ]
 
-    # 3. Build Rules
     rules = build_rules(
         [validate_text, fragment_text, create_blocks, source_block, include_block, combine_strings, combine_errors,
          combine_nodes])
+
 
     # 4. Run Production (no context passed)
     result = production(facts, rules)

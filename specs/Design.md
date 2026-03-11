@@ -87,8 +87,20 @@ from dataclasses import dataclass
 @dataclass
 class String:
     text: str
-    line_number: int    
+    line_number: int
+    name: str
 ```
+
+Import this class from file `src/syncspec/file.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class File:
+    text: str
+    name: str
+```
+
 
 Import this class from file `src/syncspec/node.py`:
 ```python

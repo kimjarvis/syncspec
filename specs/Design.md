@@ -21,7 +21,9 @@ Combines the Strings to produce the output text.
 ### [[Combine Errors]]
 
 Combines the Errors to produce a log.
+### [[Combine Nodes]]
 
+Combine Nodes to make a graph.
 # Classes
 
 Import this class from file `src/syncspec/text.py`:

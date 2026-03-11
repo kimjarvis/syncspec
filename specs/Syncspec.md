@@ -44,6 +44,7 @@ class SyncspecContext:
 
 Do not generate code to initialise the context.
 
+
 Use this code as a guideline. 
 ### Implement the unary function Syncspec
 

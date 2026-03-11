@@ -100,7 +100,7 @@ The tuple shall also contain an object of type Node:
 - Set the directive type to "include"
 - Set the key to  the value of `block.directive["include"]`
 
-- If the key does not exist in the state dictionary then:
+- If the key does not exist in the state dictionary or the value of `block.directive["include"]` is not a string then:
 	- Return an object of type Error instead. 
 	- Copy the `name` and `line_number` from Block.
 	- Add an informative error message.

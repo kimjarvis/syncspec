@@ -1,17 +1,27 @@
-from typing import Union, Dict, Any
-from .block import Block
-from .source import Source
-from .source_block_context import SourceBlockContext
+from typing import Union, Tuple
+from src.syncspec.block import Block
+from src.syncspec.string import String
+from src.syncspec.node import Node
+from src.syncspec.source_block_context import SourceBlockContext
+
 
 def make_source_block(context: SourceBlockContext):
-    def create_blocks(block: Block) -> Union[Source, Block]:
-        if "source" in block.directive:
-            value = block.directive["source"]
-            context.state[value] = block.text
-            return Source(
-                directive=block.directive,
-                text=block.text,
-                line_number=block.line_number
+    def source_block(block: Block) -> Union[Tuple[String, Node], Block]:
+        source_key = block.directive.get("source")
+
+        if isinstance(source_key, str):
+            context.state[source_key] = block.text
+
+            text = (
+                    context.open_delimiter + block.prefix + context.close_delimiter +
+                    block.text +
+                    context.open_delimiter + block.suffix + context.close_delimiter
             )
+            string_obj = String(text=text, line_number=block.line_number, name=block.name)
+            node_obj = Node(directive_type="source", key=source_key, line_number=block.line_number, name=block.name)
+
+            return string_obj, node_obj
+
         return block
-    return create_blocks
+
+    return source_block

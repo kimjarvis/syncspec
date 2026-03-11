@@ -2,29 +2,42 @@
 
 ## Functional specification
 
+Import this class from file `src/syncspec/node.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Node:
+    directive_type: str
+    key: str
+    line_number: int    
+    name: str
+```
+
+Import this class from file `src/syncspec/string.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class String:
+    text: str
+    line_number: int
+    name: str
+```
+
 Import this class from file `src/syncspec/block.py`:
 ```python
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 @dataclass
 class Block:
-    directive: Dict[str, Any]  
-    combined_directives: str
+    directive: Dict[str, Any]
+    prefix: str
+    suffix: str
     text: str
-    line_number: int    
-```
-
-Import this class from file `src/syncspec/source.py`:
-```python
-from dataclasses import dataclass
-from typing import Dict, Any
-
-@dataclass
-class Source:
-    directive: Dict[str, Any]  
-    text: str
-    line_number: int    
+    line_number: int
+    name: str
 ```
 
 Import this class from file `src/syncspec/source_block_context.py`:
@@ -34,9 +47,12 @@ from typing import ClassVar, Dict, Any
 
 @dataclass
 class SourceBlockContext:
-    state: ClassVar[Dict[str, Any]]
+    state: Dict[str, Any]
+    open_delimiter: str
+    close_delimiter: str    
 ```
 
+Do not generate code to initialise the context.
 ### Implement the unary function Source Block
 
 In the file `src/syncspec/source_block.py`.
@@ -45,18 +61,42 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_source_block(context: SourceBlockContext):	
-	def create_blocks(block: Block) -> Union[Source, Block]:
+	def source_block(block: Block) -> Union[Tuple[String, Node], Block]:
 ```
 
-If dictionary `Block.directive` contains a key "source" return an object of type Source:
-- Copy `Block.line_number` to Source.
-- Copy `Block.text` to Source.
-- value shall be the value associated with the key "source".
-- Store `Block.text` in `SourceBlockContext.state[value]` .
+Check that the value of `block.directive["source"]` is a string.
 
-If dictionary `Block.directive` does not contains a key "source" return an object of type Block:
-- Return the input parameter unchanged.
+If dictionary `Block.directive` contains a key "source" then:
 
+Return a tuple containing object of type String:
+- Copy `line_number` from Block.
+- Copy `name` from Block
+- Concatenate these strings in order to create `String.text`:
+
+1. `SourceBlockContext.open_delimiter`
+2. `block.prefix`
+3. `SourceBlockContext.close_delimiter`
+4. `block.text`
+5. `SourceBlockContext.open_delimiter`
+6. `block.suffix`
+7. `SourceBlockContext.close_delimiter`
+
+And add a key value pair to the `SourceBlockContext.state` dictionary:
+- key is the value of `block.directive["source"]`
+- Store `Block.text` in `SourceBlockContext.state[key]` .
+
+The tuple shall also contain an object of type Node:
+- Copy `line_number` from Block.
+- Copy `name` from Block
+- Set the directive type to "source"
+- Set the key to  the value of `block.directive["source"]`
+
+If dictionary `Block.directive` does not contains a key "source" then return an object of type Block:
+- Return the input parameter `block` unchanged.
+
+## Package
+
+`src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
 ## Test the unary function  
 
 In the file `tests/test_source_block.py`.

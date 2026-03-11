@@ -1,0 +1,8 @@
+strict digraph {
+freddy_2 [key=a, directive_type=source, label="freddy\n2", shape=box, style=filled, fillcolor=lightblue];
+freddy_3 [key=b, directive_type=source, label="freddy\n3", shape=box, style=filled, fillcolor=lightblue];
+freddy_5 [key=a, directive_type=include, label="freddy\n5", shape=box, style=filled, fillcolor=lightgreen];
+freddy_6 [key=b, directive_type=include, label="freddy\n6", shape=box, style=filled, fillcolor=lightgreen];
+freddy_2 -> freddy_5 [label=a];
+freddy_3 -> freddy_6 [label=b];
+}

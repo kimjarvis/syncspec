@@ -1,9 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict
+import networkx as nx
 
 @dataclass
-class CreateBlocksContext:
-	index: int
-	prefix: str
-	text: str
-	line_number: int
+class CombineNodesContext:
+	G: nx.DiGraph

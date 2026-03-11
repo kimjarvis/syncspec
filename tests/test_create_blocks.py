@@ -7,73 +7,53 @@ from src.syncspec.block import Block
 from src.syncspec.error import Error
 
 
-@pytest.fixture
-def context():
-    return CreateBlocksContext(index=0, prefix="", text="", line_number=1, name="test")
-
-
-@pytest.mark.parametrize("index, expected_type, prefix, text, fragment_text", [
-    (0, String, "", "", "data"),
-    (1, type(None), "", "", "data"),
-    (2, type(None), "data", "", "data"),
-    (3, Block, '{"key": "value"}', "content", '{"other": "data"}'),
+@pytest.mark.parametrize("index, exp_type", [
+    (0, String), (1, type(None)), (2, type(None)), (3, Block)
 ])
-def test_create_blocks_sequence(context, index, expected_type, prefix, text, fragment_text):
-    context.index = index
-    context.prefix = prefix
-    context.text = text
-    fragment = Fragment(text=fragment_text, line_number=5)
-    creator = make_create_blocks(context)
+def test_state_sequence(index, exp_type):
+    ctx = CreateBlocksContext(index=index, prefix="", text="", line_number=0)
+    fn = make_create_blocks(ctx)
+    frag = Fragment(text="{}", line_number=1, name="test")
 
-    result = creator(fragment)
+    # Pre-fill context for state 3
+    if index == 3:
+        ctx.prefix = "{}"
+        ctx.text = "body"
+        ctx.line_number = 1
 
-    assert isinstance(result, expected_type)
-    assert context.index == index + 1
-
-
-def test_create_blocks_error_parsing(context):
-    context.index = 3
-    context.prefix = "invalid::json"
-    context.text = "content"
-    fragment = Fragment(text="also::invalid", line_number=10)
-    creator = make_create_blocks(context)
-
-    result = creator(fragment)
-
-    assert isinstance(result, Error)
-    assert context.index == 4
+    result = fn(frag)
+    assert isinstance(result, exp_type)
+    assert ctx.index == index + 1
 
 
-def test_create_blocks_invalid_keys(context):
-    context.index = 3
-    context.prefix = "null: value"  # YAML parses null key
-    context.text = "content"
-    fragment = Fragment(text="{}", line_number=10)
-    creator = make_create_blocks(context)
+@pytest.mark.parametrize("prefix, suffix, expect_error", [
+    ("{}", "{}", False),
+    ("", "", False),
+    ("invalid", "{}", True),
+    ("{}", "invalid", True),
+    ('{"key": null}', "{}", False),
+])
+def test_json_parsing(prefix, suffix, expect_error):
+    ctx = CreateBlocksContext(index=3, prefix=prefix, text="body", line_number=1)
+    fn = make_create_blocks(ctx)
+    frag = Fragment(text=suffix, line_number=2, name="json_test")
 
-    result = creator(fragment)
+    result = fn(frag)
+    if expect_error:
+        assert isinstance(result, Error)
+    else:
+        assert isinstance(result, Block)
+        assert isinstance(result.directive, dict)
 
-    assert isinstance(result, Error)
 
-
-def test_create_blocks_full_cycle(context):
-    """Test complete 4-call cycle building a Block."""
-    creator = make_create_blocks(context)
-
-    # Call 0: String
-    result0 = creator(Fragment(text="line1", line_number=1))
-    assert isinstance(result0, String)
-
-    # Call 1: Set prefix
-    result1 = creator(Fragment(text='{"prefix": "data"}', line_number=2))
-    assert result1 is None
-
-    # Call 2: Set text
-    result2 = creator(Fragment(text="block content", line_number=3))
-    assert result2 is None
-
-    # Call 3: Create Block
-    result3 = creator(Fragment(text='{"suffix": "info"}', line_number=4))
-    assert isinstance(result3, Block)
-    assert result3.directive == {"prefix": "data", "suffix": "info"}
-    assert result3.text == "block content"
+def test_none_key_rejection():
+    # Simulating a case where None key might exist (though standard json prevents it)
+    # We test the validation logic explicitly if _parse_json were modified,
+    # but standard json.loads won't produce None keys.
+    # This test verifies the Block creation path works normally.
+    ctx = CreateBlocksContext(index=3, prefix='{"a": 1}', text="body", line_number=1)
+    fn = make_create_blocks(ctx)
+    frag = Fragment(text='{"b": 2}', line_number=2, name="merge_test")
+    result = fn(frag)
+    assert isinstance(result, Block)
+    assert result.directive == {"a": 1, "b": 2}

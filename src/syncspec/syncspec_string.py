@@ -17,20 +17,21 @@ from src.syncspec.include_block_context import IncludeBlockContext
 from src.syncspec.production import build_rules, production
 from src.syncspec.source_block import make_source_block
 from src.syncspec.source_block_context import SourceBlockContext
+from src.syncspec.syncspec_string_context import SyncspecStringContext
 from src.syncspec.text import Text
 from src.syncspec.validate_text import make_validate_text
 from src.syncspec.validate_text_context import ValidateTextContext
 
 
-def main():
+def make_syncspec_string(context: SyncspecStringContext):
     vtc = ValidateTextContext(
-        open_delimiter="{{",
-        close_delimiter="}}",
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
         line_number=1
     )
     ftc = FragmentTextContext(
-        open_delimiter="{{",
-        close_delimiter="}}",
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
         line_number=1
     )
     cbc = CreateBlocksContext(
@@ -39,29 +40,26 @@ def main():
         text="",
         line_number=1,
     )
-    monad = {}
     sbc = SourceBlockContext(
-        state=monad,
-        open_delimiter="{{",
-        close_delimiter="}}",
+        state=context.monad,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
     )
     ibc = IncludeBlockContext(
-        state=monad,
-        open_delimiter="{{",
-        close_delimiter="}}",
+        state=context.monad,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
     )
     csc = CombineStringsContext(
         text="",
     )
     cec = CombineErrorsContext(
-        text="",
+        text=context.log,
     )
-    graph = nx.DiGraph()
     cnc = CombineNodesContext(
-        G=graph,
+        G=context.G,
     )
 
-    # 2. Create Unary Function bound to context
     validate_text = make_validate_text(vtc)
     fragment_text = make_fragment_text(ftc)
     create_blocks = make_create_blocks(cbc)
@@ -71,28 +69,18 @@ def main():
     combine_errors = make_combine_errors(cec)
     combine_nodes = make_combine_nodes(cnc)
 
-    facts = [Text(name="freddy", text="""line 1
-    {{"source": "a"}}A{{}}
-    {{"source": "b"}}B{{}}
-    line 2
-    {{"include": "a"}}{{}} 
-    {{"include": "b"}}{{}}
-    line 3"""),
-    ]
-
     rules = build_rules(
         [validate_text, fragment_text, create_blocks, source_block, include_block, combine_strings, combine_errors,
          combine_nodes])
 
+    def syncspec_string(text: Text) -> Text:
+        facts = [text]
+        production(facts, rules)
+        return Text(text=csc.text, name=text.name)
 
-    # 4. Run Production (no context passed)
-    result = production(facts, rules)
-    pprint.pp(result)
-    pprint.pp(monad)
-    pprint.pp(csc)
-    pprint.pp(cec)
-    nx.drawing.nx_pydot.write_dot(cnc.G, "graph.dot")
+    # Expose contexts for diagnostic purposes in main3.py
+    syncspec_string._csc = csc
+    syncspec_string._cec = cec
+    syncspec_string._cnc = cnc
 
-
-if __name__ == "__main__":
-    main()
+    return syncspec_string

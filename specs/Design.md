@@ -18,6 +18,12 @@ Use the dictionary to create blocks of type include.  Converts a block of type I
 ### [[Combine Strings]]
 
 Combines the Strings to produce the output text.
+### [[Combine Errors]]
+
+Combines the Errors to produce a log.
+### [[Combine Nodes]]
+
+Combine Nodes to make a graph.
 # Classes
 
 Import this class from file `src/syncspec/text.py`:
@@ -27,6 +33,7 @@ from dataclasses import dataclass
 @dataclass
 class Text:
     text: str
+    name: str
 ```
 
 Import this class from file `src/syncspec/validated_text.py`:
@@ -36,6 +43,7 @@ from dataclasses import dataclass
 @dataclass
 class ValidatedText:
     text: str
+    name: str    
 ```
 
 Import this class from file `src/syncspec/error.py`:
@@ -57,6 +65,7 @@ from dataclasses import dataclass
 class Fragment:  
     text: str
     line_number: int
+    name: str    
 ```
 
 Import this class from file `src/syncspec/block.py`:
@@ -73,16 +82,6 @@ class Block:
     line_number: int    
 ```
 
-Import this class from file `src/syncspec/source.py`:
-```python
-from dataclasses import dataclass
-from typing import Dict, Any
-
-@dataclass
-class Source(Block):
-	pass
-```
-
 Import this class from file `src/syncspec/string.py`:
 ```python
 from dataclasses import dataclass
@@ -90,7 +89,31 @@ from dataclasses import dataclass
 @dataclass
 class String:
     text: str
+    line_number: int
+    name: str
+```
+
+Import this class from file `src/syncspec/file.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class File:
+    text: str
+    name: str
+```
+
+
+Import this class from file `src/syncspec/node.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Node:
+    directive_type: str
+    key: str
     line_number: int    
+    name: str
 ```
 
 

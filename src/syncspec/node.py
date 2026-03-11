@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
 @dataclass
-class Fragment:
-    text: str
+class Node:
+    directive_type: str
+    key: str
     line_number: int
     name: str

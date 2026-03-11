@@ -1,1 +1,11 @@
-String(text='line 1\nline 2\nline 3', line_number=1, name='example.md')
+A
+<!-- {{"source": "File"}} -->
+```python
+from dataclasses import dataclass
+
+@dataclass
+class File:
+    text: str
+    name: str
+````
+<!-- {{ }} -->

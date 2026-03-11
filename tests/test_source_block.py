@@ -5,27 +5,20 @@ from src.syncspec.string import String
 from src.syncspec.source_block_context import SourceBlockContext
 
 
-@pytest.mark.parametrize(
-    "directive, prefix, suffix, expected_type, check_state",
-    [
-        ({"source": "k"}, "p", "s", String, True),
-        ({"source": "k"}, None, "s", String, True),
-        ({"other": "v"}, "p", "s", Block, False),
-        ({}, "p", "s", Block, False),
-    ]
-)
-def test_source_block(directive, prefix, suffix, expected_type, check_state):
-    context = SourceBlockContext(state={}, open_delimiter="{", close_delimiter="}")
-    transformer = make_source_block(context)
-    block = Block(directive=directive, prefix=prefix, suffix=suffix, text="t", line_number=1)
+@pytest.mark.parametrize("directive, expected_type, state_updated", [
+    ({"source": "key1"}, String, True),
+    ({}, Block, False),
+])
+def test_source_block(directive, expected_type, state_updated):
+    context = SourceBlockContext(state={}, open_delimiter="{{", close_delimiter="}}")
+    block = Block(directive=directive, prefix="p", suffix="s", text="t", line_number=1, name="n")
 
-    result = transformer(block)
+    func = make_source_block(context)
+    result = func(block)
 
     assert isinstance(result, expected_type)
-    if check_state:
-        assert context.state["k"] == "t"
-        exp_prefix = prefix or ""
-        # Constructs: { + prefix + } + text + { + suffix + }
-        assert result.text == f"{{{exp_prefix}}}t{{{suffix}}}"
+    if state_updated:
+        assert context.state["key1"] == "t"
+        assert result.text == "{{p}}t{{s}}"
     else:
         assert result is block

@@ -99,19 +99,18 @@ If index mod 4 equals 3 then return an object of type Block or Error.
 - Copy  `Fragment.text` and store it in `Block.suffix`
 - Copy  `Fragment.name` and store it in `Block.name`
 - Copy the context line_number into the Block.
-- Interpret `Block.prefix` a JSON or YAML.  Attempt to parse text as JSON object, wrapping in braces if necessary.  Parse text as JSON or YAML. Supports raw fragments and complete objects. Convert it into a dictionary.  
-- Interpret `Block.suffix` as a JSON or YAML.  Attempt to parse text as JSON object, wrapping in braces if necessary.  Parse text as JSON or YAML. Supports raw fragments and complete objects.Convert it into a dictionary.  
+- Interpret `Block.prefix` a JSON.  Parse text as JSON object, wrapping in braces if necessary.  Supports raw fragments and complete objects.  Convert the resulting JSON object to a dictionary.  An empty string is valid, it will cause an empty dictionary to be created.
+- Interpret `Block.suffix` as a JSON.  Parse text as JSON object, wrapping in braces if necessary.  Supports raw fragments and complete objects.  Convert the resulting JSON object to a dictionary.  An empty string is valid, it will cause an empty dictionary to be created.
 - Combine the dictionaries and store in `Block.directive`.
 #### Conversion errors
 
-- If an error occurs converting the strings into JSON or YAML or converting to a dictionary, return an object of type Error, otherwise return an object of type Block.
+- If an error occurs converting the strings to JSON or converting the JSON to a dictionary, return an object of type Error, otherwise return an object of type Block.
 - Copy the context line_number from the context into Error and add an informative text message.
 - Copy the   `Fragment.name` into Error.
 #### Assume that
 
-- JSON only allows string keys, but YAML can parse non-string keys.  Ensure that keys are valid strings.  Reject dictionaries containing None keys.
-- Mutable Context: CreateBlocksContext is mutable and shared across calls to the closure.
-- Parsing Precedence: JSON is attempted before YAML. If JSON fails, YAML is tried.
+- Ensure that keys are valid strings.  Reject dictionaries containing None keys.
+- Mutable Context: `CreateBlocksContext` is mutable and shared across calls to the closure.
 - Brace Wrapping: If raw text fails parsing, {} are added around the text and parsing is retried.
 - Dictionary Merge: Later keys (suffix/fragment) overwrite earlier keys (prefix) in Block.directive.
 ## Package

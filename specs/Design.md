@@ -18,6 +18,10 @@ Use the dictionary to create blocks of type include.  Converts a block of type I
 ### [[Combine Strings]]
 
 Combines the Strings to produce the output text.
+### [[Combine Errors]]
+
+Combines the Errors to produce a log.
+
 # Classes
 
 Import this class from file `src/syncspec/text.py`:
@@ -84,6 +88,18 @@ from dataclasses import dataclass
 class String:
     text: str
     line_number: int    
+```
+
+Import this class from file `src/syncspec/node.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Node:
+    directive_type: str
+    key: str
+    line_number: int    
+    name: str
 ```
 
 

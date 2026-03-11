@@ -2,6 +2,18 @@
 
 ## Functional specification
 
+Import this class from file `src/syncspec/node.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Node:
+    directive_type: str
+    key: str
+    line_number: int    
+    name: str
+```
+
 Import this class from file `src/syncspec/string.py`:
 ```python
 from dataclasses import dataclass
@@ -9,7 +21,8 @@ from dataclasses import dataclass
 @dataclass
 class String:
     text: str
-    line_number: int    
+    line_number: int
+    name: str
 ```
 
 Import this class from file `src/syncspec/block.py`:
@@ -19,11 +32,12 @@ from typing import Dict, Any, Optional
 
 @dataclass
 class Block:
-    directive: Dict[str, Any]  
-    prefix: Optional[str]
+    directive: Dict[str, Any]
+    prefix: str
     suffix: str
     text: str
-    line_number: int    
+    line_number: int
+    name: str
 ```
 
 Import this class from file `src/syncspec/source_block_context.py`:
@@ -47,13 +61,16 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_source_block(context: SourceBlockContext):	
-	def source_block(block: Block) -> Union[String, Block]:
+	def source_block(block: Block) -> Union[Tuple[String, Node], Block]:
 ```
+
+Check that the value of `block.directive["source"]` is a string.
 
 If dictionary `Block.directive` contains a key "source" then:
 
-Return an object of type String:
+Return a tuple containing object of type String:
 - Copy `line_number` from Block.
+- Copy `name` from Block
 - Concatenate these strings in order to create `String.text`:
 
 1. `SourceBlockContext.open_delimiter`
@@ -65,12 +82,17 @@ Return an object of type String:
 7. `SourceBlockContext.close_delimiter`
 
 And add a key value pair to the `SourceBlockContext.state` dictionary:
-- value shall be the value associated with the key "source".
-- Store `Block.text` in `SourceBlockContext.state[value]` .
+- key is the value of `block.directive["source"]`
+- Store `Block.text` in `SourceBlockContext.state[key]` .
 
+The tuple shall also contain an object of type Node:
+- Copy `line_number` from Block.
+- Copy `name` from Block
+- Set the directive type to "source"
+- Set the key to  the value of `block.directive["source"]`
 
 If dictionary `Block.directive` does not contains a key "source" then return an object of type Block:
-- Return the input parameter unchanged.
+- Return the input parameter `block` unchanged.
 
 ## Package
 

@@ -9,7 +9,8 @@ from dataclasses import dataclass
 @dataclass
 class String:
     text: str
-    line_number: int    
+    line_number: int
+    name: str
 ```
 
 Import this class from file `src/syncspec/combine_strings_context.py`:

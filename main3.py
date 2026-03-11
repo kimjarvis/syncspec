@@ -1,12 +1,11 @@
 import pprint
 import networkx as nx
 
-from src.syncspec.syncspec_string import make_syncspec_string
-from src.syncspec.syncspec_string_context import SyncspecStringContext
 from src.syncspec.text import Text
+from src.syncspec.syncspec_string_context import SyncspecStringContext
+from src.syncspec.syncspec_string import make_syncspec_string
 
 if __name__ == "__main__":
-    # Initialise the context
     context = SyncspecStringContext(
         open_delimiter="{{",
         close_delimiter="}}",
@@ -15,10 +14,8 @@ if __name__ == "__main__":
         monad={}
     )
 
-    # Create the syncspec_string function
     syncspec_string = make_syncspec_string(context)
 
-    # Call the function with the Text object
     input_text = Text(
         name="freddy",
         text="""line 1
@@ -32,14 +29,12 @@ if __name__ == "__main__":
 
     result = syncspec_string(input_text)
 
-    # Map internal contexts to variables for diagnostic output
+    # Diagnostic information
     monad = context.monad
-    csc = syncspec_string._csc
-    cec = syncspec_string._cec
-    cnc = syncspec_string._cnc
+    cec = context.cec
+    cnc = type('obj', (object,), {'G': context.G})()  # Wrapper to match diagnostic var name
 
-    # Produce diagnostic information
+    pprint.pp(result)
     pprint.pp(monad)
-    pprint.pp(csc)
     pprint.pp(cec)
     nx.drawing.nx_pydot.write_dot(cnc.G, "graph.dot")

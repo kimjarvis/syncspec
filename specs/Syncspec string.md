@@ -12,6 +12,16 @@ class Text:
     name: str
 ```
 
+Import this class from file `src/syncspec/file.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class File:
+    text: str
+    name: str
+```
+
 
 Import this class from file `src/syncspec/syncspec_string_context.py`:
 ```python
@@ -37,7 +47,7 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_syncspec_string(context: SyncspecStringContext):
-	def syncspec_string(text: Text) -> Text
+	def syncspec_string(text: Text) -> File
 ```
 
 Modify this code to implement the function:
@@ -111,7 +121,7 @@ Modify this code to implement the function:
 - Use `SyncspecStringContext.log` to set `CombineErrorsContext.text`.
 - Do not modify magic numbers, such as `index=0`.
 - The parameter text shall replace the creation Text object, used to set facts.
-- Return an object of type `Text`, use the final value of `CombineStringsContext.text` and the parameter value `text.name`.
+- Return an object of type `File`, use the final value of `CombineStringsContext.text` and the parameter value `text.name`.
 
 #### Implement a calling program
 
@@ -132,8 +142,13 @@ Call the function with the Text object, with name "freddy", from the example tex
 Produce this diagnostic information after the program has run. 
 
 ```
+    # Diagnostic information
+    monad = context.monad
+    cec = context.cec
+    cnc = type('obj', (object,), {'G': context.G})()  # Wrapper to match diagnostic var name
+
+    pprint.pp(result)
     pprint.pp(monad)
-    pprint.pp(csc)
     pprint.pp(cec)
     nx.drawing.nx_pydot.write_dot(cnc.G, "graph.dot")
 ```

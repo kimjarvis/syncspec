@@ -1,5 +1,5 @@
-A
-<!-- {{"source": "File"}} -->
+1
+<!--{{"include": "File"}} -->
 ```python
 from dataclasses import dataclass
 
@@ -7,5 +7,5 @@ from dataclasses import dataclass
 class File:
     text: str
     name: str
-````
-<!-- {{ }} -->
+```
+<!-- {{}} -->

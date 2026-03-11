@@ -1,6 +1,11 @@
-import pprint
+from dataclasses import dataclass
+from typing import Any, Dict
 
 import networkx as nx
+
+from src.syncspec.text import Text
+from src.syncspec.file import File
+from src.syncspec.syncspec_string_context import SyncspecStringContext
 
 from src.syncspec.combine_errors import make_combine_errors
 from src.syncspec.combine_errors_context import CombineErrorsContext
@@ -17,8 +22,6 @@ from src.syncspec.include_block_context import IncludeBlockContext
 from src.syncspec.production import build_rules, production
 from src.syncspec.source_block import make_source_block
 from src.syncspec.source_block_context import SourceBlockContext
-from src.syncspec.syncspec_string_context import SyncspecStringContext
-from src.syncspec.text import Text
 from src.syncspec.validate_text import make_validate_text
 from src.syncspec.validate_text_context import ValidateTextContext
 
@@ -73,14 +76,14 @@ def make_syncspec_string(context: SyncspecStringContext):
         [validate_text, fragment_text, create_blocks, source_block, include_block, combine_strings, combine_errors,
          combine_nodes])
 
-    def syncspec_string(text: Text) -> Text:
+    def syncspec_string(text: Text) -> File:
+        print(text)
         facts = [text]
         production(facts, rules)
-        return Text(text=csc.text, name=text.name)
+        print(csc)
+        return File(text=csc.text, name=text.name)
 
-    # Expose contexts for diagnostic purposes in main3.py
-    syncspec_string._csc = csc
-    syncspec_string._cec = cec
-    syncspec_string._cnc = cnc
+    # Expose internal contexts for diagnostics in main program
+    context.cec = cec
 
     return syncspec_string

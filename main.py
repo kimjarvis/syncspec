@@ -52,7 +52,6 @@ def main():
     )
     csc = CombineStringsContext(
         text="",
-        name="",
     )
     cec = CombineErrorsContext(
         text="",

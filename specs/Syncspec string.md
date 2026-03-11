@@ -29,7 +29,7 @@ class SyncspecStringContext:
 ```
 
 Do not generate code to initialise the context.
-### Implement the unary function Syncspec
+### Implement the unary function Syncspec String
 
 In the file `src/syncspec/syncspec_string.py`.
 
@@ -37,7 +37,7 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_syncspec_string(context: SyncspecStringContext):
-	def syncspec(text: Text) -> Text
+	def syncspec_string(text: Text) -> Text
 ```
 
 Modify this code to implement the function:
@@ -107,9 +107,37 @@ Modify this code to implement the function:
 ```
 
 - The contexts shall be initialised with values from `SyncspecStringContext`.  
+- Context objects (csc, sbc, ibc, etc.) are instantiated once in the factory.  Subsequent calls to `syncspec_string` will carry over state.
+- Use `SyncspecStringContext.log` to set `CombineErrorsContext.text`.
 - Do not modify magic numbers, such as `index=0`.
 - The parameter text shall replace the creation Text object, used to set facts.
-- Return an object of type `Text`, use the value of `CombineStringsContext.text` and the parameter value `text.name`.
+- Return an object of type `Text`, use the final value of `CombineStringsContext.text` and the parameter value `text.name`.
+
+#### Implement a calling program
+
+Write a main program `main3.py` that calls `syncspec_string`.
+
+Initialise the context with:
+
+```
+    open_delimiter = "{{"
+    close_delimiter = "}}"
+    log: ""
+    G: nx.DiGraph()
+	monad: {}
+```
+
+Call the function with the Text object, with name "freddy", from the example text.
+
+Produce this diagnostic information after the program has run. 
+
+```
+    pprint.pp(monad)
+    pprint.pp(csc)
+    pprint.pp(cec)
+    nx.drawing.nx_pydot.write_dot(cnc.G, "graph.dot")
+```
+
 ## Package
 
 `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.

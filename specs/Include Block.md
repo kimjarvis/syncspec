@@ -81,6 +81,14 @@ Check that the value of `block.directive["include"]` is a string.
 
 If dictionary `Block.directive` contains a key "include" then:
 
+Fetch value v from `IncludeBlockContext.state[key]` where key is the value of `block.directive["include"]`.
+
+If dictionary `Block.directive` contains a key "head" with an integer value h with then:
+- Remove the first h lines from v.
+- If it is not possible to remove h lines from v then return an object of type Error, copy the block line_number and name into Error and add an informative message.
+And then, if dictionary `Block.directive` contains a key "tail" with an integer value t with then:
+- Remove the last t lines from v. If it is not possible to remove t lines from v then return an object of type Error, copy the block line_number and name into Error and add an informative message.
+
 Return a tuple containing object of type String:
 - Copy `line_number` from Block.
 - Copy `name` from Block.
@@ -89,7 +97,7 @@ Return a tuple containing object of type String:
 1. `IncludeBlockContext.open_delimiter`
 2. `block.prefix`
 3. `IncludeBlockContext.close_delimiter`
-4. `IncludeBlockContext.state[key]` where key is the value of `block.directive["include"]`
+4. The value v
 5. `IncludeBlockContext.open_delimiter`
 6. `block.suffix`
 7. `IncludeBlockContext.close_delimiter`

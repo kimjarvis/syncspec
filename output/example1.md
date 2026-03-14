@@ -1,11 +1,5 @@
-1
-<!--{{"include": "File"}} -->
-```python
-from dataclasses import dataclass
-
-@dataclass
-class File:
-    text: str
-    name: str
-```
-<!-- {{}} -->
+First
+Before{{"include": "File", "head": 1, "tail": 1}}1
+2
+3{{}}After
+Last

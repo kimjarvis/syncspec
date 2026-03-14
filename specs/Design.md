@@ -14,7 +14,10 @@ Returns objects of  types, String, Block.
 Populate the dictionary from blocks of type source.  Converts a block of type Source into a String.
 ### [[Include Block]]
 
-Use the dictionary to create blocks of type include.  Converts a block of type Include into a String.
+Use the dictionary to look up a key.  Converts a block of type Include into a String.
+### [[Import Block]]
+
+Create blocks of type String from files.
 ### [[Combine Strings]]
 
 Combines the Strings to produce the output text.

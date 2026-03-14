@@ -9,3 +9,4 @@ class SyncspecStringContext:
     log: str
     G: nx.DiGraph
     monad: Dict[str, Any]
+    import_path: str

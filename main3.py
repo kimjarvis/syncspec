@@ -1,40 +1,40 @@
 import pprint
 import networkx as nx
 
-from src.syncspec.text import Text
 from src.syncspec.syncspec_string_context import SyncspecStringContext
 from src.syncspec.syncspec_string import make_syncspec_string
+from src.syncspec.text import Text
 
-if __name__ == "__main__":
+def main():
+    open_delimiter = "{{"
+    close_delimiter = "}}"
+    log = "log.txt"
+    G = nx.DiGraph()
+    monad = {}
+    import_path = "."
+
     context = SyncspecStringContext(
-        open_delimiter="{{",
-        close_delimiter="}}",
-        log="",
-        G=nx.DiGraph(),
-        monad={}
+        open_delimiter=open_delimiter,
+        close_delimiter=close_delimiter,
+        log=log,
+        G=G,
+        monad=monad,
+        import_path=import_path
     )
 
     syncspec_string = make_syncspec_string(context)
 
-    input_text = Text(
-        name="freddy",
-        text="""line 1
+    text_obj = Text(name="freddy", text="""line 1
     {{"source": "a"}}A{{}}
     {{"source": "b"}}B{{}}
     line 2
     {{"include": "a"}}{{}} 
     {{"include": "b"}}{{}}
-    line 3"""
-    )
+    line 3""")
 
-    result = syncspec_string(input_text)
+    result = syncspec_string(text_obj)
 
-    # Diagnostic information
-    monad = context.monad
-    cec = context.cec
-    cnc = type('obj', (object,), {'G': context.G})()  # Wrapper to match diagnostic var name
+    pprint.pp(context.csc)
 
-    pprint.pp(result)
-    pprint.pp(monad)
-    pprint.pp(cec)
-    nx.drawing.nx_pydot.write_dot(cnc.G, "graph.dot")
+if __name__ == "__main__":
+    main()

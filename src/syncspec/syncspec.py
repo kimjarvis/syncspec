@@ -2,9 +2,9 @@ from typing import List
 import networkx as nx
 from src.syncspec.syncspec_context import SyncspecContext
 from src.syncspec.syncspec_string_context import SyncspecStringContext
+from src.syncspec.syncspec_string import make_syncspec_string
 from src.syncspec.text import Text
 from src.syncspec.file import File
-from src.syncspec.syncspec_string import make_syncspec_string
 
 
 def make_syncspec(context: SyncspecContext):
@@ -13,10 +13,12 @@ def make_syncspec(context: SyncspecContext):
         close_delimiter=context.close_delimiter,
         log="",
         G=nx.DiGraph(),
-        monad={}
+        monad={},
+        import_path=context.import_path
     )
+    syncspec_string = make_syncspec_string(string_context)
 
     def syncspec(texts: List[Text]) -> List[File]:
-        return [make_syncspec_string(string_context)(text) for text in texts]
+        return [syncspec_string(t) for t in texts]
 
     return syncspec

@@ -33,11 +33,10 @@ class SyncspecStringContext:
     open_delimiter: str
     close_delimiter: str
     log: str
-    G: nx.DiGraph
-    monad: Dict[str, Any]
+	G: nx.DiGraph
+	monad: Dict[str, Any]
+	import_path: str
 ```
-
-Do not generate code to initialise the context.
 
 Import this class from file `src/syncspec/syncspec_context.py`:
 ```python
@@ -50,12 +49,17 @@ class SyncspecContext:
     close_delimiter: str
     log_file: str
     graph_file: str
+	import_path: str    
 ```
 
-Do not generate code to initialise the context.
+Do not generate code to initialise `SyncspecContext`.
 
+Verify at context at initialization time:
+- open_delimiter and close_delimiter are not empty strings.
+- log_file is a valid file path.  The file may or may not exist already.
+- graph_file is a valid file path.  The file may or may not exist already.
+- import_path is a valid directory path.  The directory must exist.
 
-Use this code as a guideline. 
 ### Implement the unary function Syncspec
 
 In the file `src/syncspec/syncspec.py`.
@@ -88,7 +92,8 @@ Generate a python program `main1.py` that calls `syncspec`.  The main function s
 `--close_delimiter` with default "}}"
 `--log_file` with default "log.txt"
 `--graph_file` with default "graph.dot"
-`--output` required.   
+`--output` required.
+`--import_path` optional.
 And required positional parameter `path`  
 #### Validate the parameters
 
@@ -100,6 +105,7 @@ And required positional parameter `path`
 Print an informative error message and stop if verification fails.
 
 Construct the syncspec context from the parameters.
+- If the import path is not specified set it to path.
 
 Traverse the directory `path` recursively.  For each markdown  `.md` file encountered create an object of type `Text` and add it to a list.  `Text.text` shall be the file content.  `Text.name` shall be the file path relative to `path`.
 

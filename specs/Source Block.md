@@ -101,6 +101,8 @@ If dictionary `Block.directive` contains a key "head" with an integer value h wi
 And then, if dictionary `Block.directive` contains a key "tail" with an integer value t with then:
 - Remove the last t lines from `text`. If it is not possible to remove t lines from `text` then return an object of type Error, copy the block line_number and name into Error and add an informative message.
 
+First apply head then apply tail to the result. Negative head or tail values shall be rejected as invalid, head=0 or tail=0 are valid no-ops.
+
 And add a key value pair to the `SourceBlockContext.state` dictionary:
 - key is the value of `block.directive["source"]`
 - Store `text` in `SourceBlockContext.state[key]` .

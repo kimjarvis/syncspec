@@ -1,4 +1,4 @@
-# Include Block 
+# Import Block 
 
 ## Functional specification
 
@@ -13,7 +13,6 @@ class Node:
     line_number: int    
     name: str
 ```
-
 
 Import this class from file `src/syncspec/error.py`:
 ```python
@@ -52,36 +51,47 @@ class Block:
     name: str    
 ```
 
-Import this class from file `src/syncspec/include_block_context.py`:
+Import this class from file `src/syncspec/import_block_context.py`:
 ```python
 from dataclasses import dataclass, field
 from typing import ClassVar, Dict, Any
 
 @dataclass
-class IncludeBlockContext:
-    state: Dict[str, Any]
+class ImportBlockContext:
+	import_path: str
     open_delimiter: str
     close_delimiter: str    
 ```
 
 Do not generate code to initialise the context.
 
-### Implement the unary function Include Block
+ Verify at context at initialization time:
+- import_path is a valid directory path.
+### Implement the unary function Import Block
 
-In the file `src/syncspec/include_block.py`.
+In the file `src/syncspec/import_block.py`.
 
 Define a closure factory with a unary function with signature:
 
 ```python
-def make_include_block(context: IncludeBlockContext):	
-	def include_block(block: Block) -> Union[Tuple[String, Node], Block, Error]:
+def make_import_block(context: ImportBlockContext):	
+	def import_block(block: Block) -> Union[Tuple[String, Node], Block, Error]:
 ```
 
-Check that the value of `block.directive["include"]` is a string.
+Check that the value of `block.directive["import"]` is a string.
 
-If dictionary `Block.directive` contains a key "include" then:
+If dictionary `Block.directive` contains a key "import" then:
 
-Fetch value v from `IncludeBlockContext.state[key]` where key is the value of `block.directive["include"]`.
+The value of `block.directive["import"]` is a relative file or symbolic link path.  The path is relative to the directory path `ImportBlockContext.import_path`.  Verify that:  
+- The file must be in directory `ImportBlockContext.import_path` or one of its sub-directories.  Accessing a parent directory is not allowed.
+- If the file is a symbolic link then the link target must also be in the directory `ImportBlockContext.import_path` or one of its sub-directories.  
+- The file exists.  
+- The file is a text file, not a binary file.  Treat it as utf-8. 
+- The file is readable.
+
+If any of these conditions are not met, return an object of type Error, copy the block line_number and name into Error and add an informative message.
+
+Read the content of the file into string variable v.
 
 If dictionary `Block.directive` contains a key "head" with an integer value h with then:
 - Remove the first h lines from v.
@@ -96,26 +106,21 @@ Return a tuple containing object of type String:
 - Copy `name` from Block.
 - Concatenate these strings in order to create `String.text`:
 
-1. `IncludeBlockContext.open_delimiter`
+1. `ImportBlockContext.open_delimiter`
 2. `block.prefix`
-3. `IncludeBlockContext.close_delimiter`
+3. `ImportBlockContext.close_delimiter`
 4. The value v
-5. `IncludeBlockContext.open_delimiter`
+5. `ImportBlockContext.open_delimiter`
 6. `block.suffix`
-7. `IncludeBlockContext.close_delimiter`
+7. `ImportBlockContext.close_delimiter`
 
 The tuple shall also contain an object of type Node:
 - Copy `line_number` from Block.
 - Copy `name` from Block
-- Set the directive type to "include"
-- Set the key to  the value of `block.directive["include"]`
+- Set the directive type to "import"
+- Set the key to  the value of `block.directive["import"]`
 
-- If the key does not exist in the state dictionary or the value of `block.directive["include"]` is not a string then:
-	- Return an object of type Error instead. 
-	- Copy the `name` and `line_number` from Block.
-	- Add an informative error message.
-
-If dictionary `Block.directive` does not contains a key "include" then return an object of type Block:
+If dictionary `Block.directive` does not contains a key "import" then return an object of type Block:
 - Return the input parameter unchanged.
 
 ## Package
@@ -123,7 +128,7 @@ If dictionary `Block.directive` does not contains a key "include" then return an
 `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
 ## Test the unary function  
 
-In the file `tests/test_include_block.py`.
+In the file `tests/test_import_block.py`.
 
 - Write pytests to verify the functionality.
 - Tests should be individual functions. Do not define a test class.    

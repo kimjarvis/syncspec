@@ -22,7 +22,6 @@ class File:
     name: str
 ```
 
-
 Import this class from file `src/syncspec/syncspec_string_context.py`:
 ```python
 from dataclasses import dataclass, field
@@ -36,9 +35,18 @@ class SyncspecStringContext:
     log: str
 	G: nx.DiGraph
 	monad: Dict[str, Any]
+	import_path: str
 ```
 
 Do not generate code to initialise the context.
+
+Verify at context at initialization time:
+- open_delimiter and close_delimiter are not empty strings.
+- log is a valid file path.  The file may or may not exist already.
+- G is a valid nx.DiGraph object.
+- monad is a valid dictionary.
+- import_path is a valid directory path.  The directory must exist.
+
 ### Implement the unary function Syncspec String
 
 In the file `src/syncspec/syncspec_string.py`.
@@ -54,13 +62,13 @@ Modify this code to implement the function:
 
 ```python
     vtc = ValidateTextContext(
-        open_delimiter="{{",
-        close_delimiter="}}",
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
         line_number=1
     )
     ftc = FragmentTextContext(
-        open_delimiter="{{",
-        close_delimiter="}}",
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
         line_number=1
     )
     cbc = CreateBlocksContext(
@@ -69,32 +77,36 @@ Modify this code to implement the function:
         text="",
         line_number=1,
     )
-    monad = {}
     sbc = SourceBlockContext(
-        state=monad,
-        open_delimiter="{{",
-        close_delimiter="}}",
+        state=context.monad,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
+    )
+    imbc = ImportBlockContext(
+        path=context.import_path,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
     )
     ibc = IncludeBlockContext(
-        state=monad,
-        open_delimiter="{{",
-        close_delimiter="}}",
+        state=context.monad,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
     )
     csc = CombineStringsContext(
         text="",
     )
     cec = CombineErrorsContext(
-        text="",
+        text=context.log,
     )
-    graph = nx.DiGraph()
     cnc = CombineNodesContext(
-        G=graph,
+        G=context.G,
     )
 
     validate_text = make_validate_text(vtc)
     fragment_text = make_fragment_text(ftc)
     create_blocks = make_create_blocks(cbc)
     source_block = make_source_block(sbc)
+    import_block = make_import_block(imbc)
     include_block = make_include_block(ibc)
     combine_strings = make_combine_strings(csc)
     combine_errors = make_combine_errors(cec)
@@ -110,7 +122,7 @@ Modify this code to implement the function:
     ]
 
     rules = build_rules(
-        [validate_text, fragment_text, create_blocks, source_block, include_block, combine_strings, combine_errors,
+        [validate_text, fragment_text, create_blocks, source_block, import_block, include_block, combine_strings, combine_errors,
          combine_nodes])
 
 	production(facts, rules)
@@ -122,37 +134,44 @@ Modify this code to implement the function:
 - Do not modify magic numbers, such as `index=0`.
 - The parameter text shall replace the creation Text object, used to set facts.
 - Return an object of type `File`, use the final value of `CombineStringsContext.text` and the parameter value `text.name`.
-
 #### Implement a calling program
 
-Write a main program `main3.py` that calls `syncspec_string`.
+## Package
 
-Initialise the context with:
+`src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
+## Test the unary function  
 
-```
+In the file `tests/test_syncspec_string.py`.
+
+- Write pytests to verify the functionality.
+- Tests should be individual functions. Do not define a test class.    
+- Use `@pytest.mark.parametrize` to create concise tests.  
+
+Test an example call using this guidance:
+
+Initialise the context suggestion:
+```python
     open_delimiter = "{{"
     close_delimiter = "}}"
-    log: ""
-    G: nx.DiGraph()
-	monad: {}
+    log = "log.txt"
+    G = nx.DiGraph()
+	monad = {}
+	import_path="."
 ```
 
-Call the function with the Text object, with name "freddy", from the example text.
-
-Produce this diagnostic information after the program has run. 
+Call the function with the Text object, with name "freddy", from the example.
+Attach the `CombineStringsContext` to the context instance to allow access without modifying the dataclass definition.  
+Assert that the `CombineStringsContext` object matches this pretty printed example.
 
 ```
-    # Diagnostic information
-    monad = context.monad
-    cec = context.cec
-    cnc = type('obj', (object,), {'G': context.G})()  # Wrapper to match diagnostic var name
-
-    pprint.pp(result)
-    pprint.pp(monad)
-    pprint.pp(cec)
-    nx.drawing.nx_pydot.write_dot(cnc.G, "graph.dot")
+CombineStringsContext(text='line 1\n'
+                           '    {{"source": "a"}}A{{}}\n'
+                           '    {{"source": "b"}}B{{}}\n'
+                           '    line 2\n'
+                           '    {{"include": "a"}}A{{}} \n'
+                           '    {{"include": "b"}}B{{}}\n'
+                           '    line 3')
 ```
-
 ## Package
 
 `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
@@ -182,6 +201,8 @@ from src.syncspec.source_block_context import SourceBlockContext
 from src.syncspec.text import Text
 from src.syncspec.validate_text import make_validate_text
 from src.syncspec.validate_text_context import ValidateTextContext
+from src.syncspec.import_block import make_import_block
+from src.syncspec.import_block_context import ImportBlockContext
 ```
 
 ## Explain the solution  

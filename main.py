@@ -1,97 +1,52 @@
-import pprint
-
-import networkx as nx
-
-from src.syncspec.combine_errors import make_combine_errors
-from src.syncspec.combine_errors_context import CombineErrorsContext
-from src.syncspec.combine_nodes import make_combine_nodes
-from src.syncspec.combine_nodes_context import CombineNodesContext
-from src.syncspec.combine_strings import make_combine_strings
-from src.syncspec.combine_strings_context import CombineStringsContext
-from src.syncspec.create_blocks import make_create_blocks
-from src.syncspec.create_blocks_context import CreateBlocksContext
-from src.syncspec.fragment_text import make_fragment_text
-from src.syncspec.fragment_text_context import FragmentTextContext
-from src.syncspec.include_block import make_include_block
-from src.syncspec.include_block_context import IncludeBlockContext
-from src.syncspec.production import build_rules, production
-from src.syncspec.source_block import make_source_block
-from src.syncspec.source_block_context import SourceBlockContext
+import argparse
+import sys
+from pathlib import Path
+from src.syncspec.syncspec import make_syncspec
+from src.syncspec.syncspec_context import SyncspecContext
 from src.syncspec.text import Text
-from src.syncspec.validate_text import make_validate_text
-from src.syncspec.validate_text_context import ValidateTextContext
+
+
+def err(msg):
+    print(f"Error: {msg}", file=sys.stderr)
+    sys.exit(1)
 
 
 def main():
-    vtc = ValidateTextContext(
-        open_delimiter="{{",
-        close_delimiter="}}",
-        line_number=1
-    )
-    ftc = FragmentTextContext(
-        open_delimiter="{{",
-        close_delimiter="}}",
-        line_number=1
-    )
-    cbc = CreateBlocksContext(
-        index=0,
-        prefix="",
-        text="",
-        line_number=1,
-    )
-    monad = {}
-    sbc = SourceBlockContext(
-        state=monad,
-        open_delimiter="{{",
-        close_delimiter="}}",
-    )
-    ibc = IncludeBlockContext(
-        state=monad,
-        open_delimiter="{{",
-        close_delimiter="}}",
-    )
-    csc = CombineStringsContext(
-        text="",
-    )
-    cec = CombineErrorsContext(
-        text="",
-    )
-    graph = nx.DiGraph()
-    cnc = CombineNodesContext(
-        G=graph,
+    p = argparse.ArgumentParser()
+    p.add_argument('--open_delimiter', default="{{")
+    p.add_argument('--close_delimiter', default="}}")
+    p.add_argument('--log_file', default="log.txt")
+    p.add_argument('--graph_file', default="graph.dot")
+    p.add_argument('--output', required=True)
+    p.add_argument('--import_path')
+    p.add_argument('path')
+    args = p.parse_args()
+
+    if Path(args.log_file).exists(): err(f"log_file {args.log_file} exists.")
+    if Path(args.graph_file).exists(): err(f"graph_file {args.graph_file} exists.")
+    if Path(args.graph_file).suffix != '.dot': err(f"graph_file {args.graph_file} needs .dot suffix.")
+    if not Path(args.output).is_dir(): err(f"output {args.output} is not a directory.")
+    if not Path(args.path).is_dir(): err(f"path {args.path} is not a directory.")
+
+    import_path = args.import_path if args.import_path else args.path
+    if not Path(import_path).is_dir(): err(f"import_path {import_path} is not a directory.")
+
+    ctx = SyncspecContext(
+        open_delimiter=args.open_delimiter,
+        close_delimiter=args.close_delimiter,
+        log_file=args.log_file,
+        graph_file=args.graph_file,
+        import_path=import_path
     )
 
-    # 2. Create Unary Function bound to context
-    validate_text = make_validate_text(vtc)
-    fragment_text = make_fragment_text(ftc)
-    create_blocks = make_create_blocks(cbc)
-    source_block = make_source_block(sbc)
-    include_block = make_include_block(ibc)
-    combine_strings = make_combine_strings(csc)
-    combine_errors = make_combine_errors(cec)
-    combine_nodes = make_combine_nodes(cnc)
+    syncspec = make_syncspec(ctx)
+    root = Path(args.path)
+    texts = [Text(text=f.read_text(), name=str(f.relative_to(root))) for f in root.rglob("*.md")]
 
-    facts = [Text(name="freddy", text="""line 1
-    {{"source": "a"}}A{{}}
-    {{"source": "b"}}B{{}}
-    line 2
-    {{"include": "a"}}{{}} 
-    {{"include": "b"}}{{}}
-    line 3"""),
-    ]
-
-    rules = build_rules(
-        [validate_text, fragment_text, create_blocks, source_block, include_block, combine_strings, combine_errors,
-         combine_nodes])
-
-
-    # 4. Run Production (no context passed)
-    result = production(facts, rules)
-    pprint.pp(result)
-    pprint.pp(monad)
-    pprint.pp(csc)
-    pprint.pp(cec)
-    nx.drawing.nx_pydot.write_dot(cnc.G, "graph.dot")
+    for file in syncspec(texts):
+        out = Path(args.output) / file.name
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(file.text)
 
 
 if __name__ == "__main__":

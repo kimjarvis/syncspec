@@ -1,4 +1,4 @@
-# Syncspec String
+# Syncspec Text
 
 ## Functional specification
 
@@ -22,40 +22,39 @@ class File:
     name: str
 ```
 
-Import this class from file `src/syncspec/syncspec_string_context.py`:
+Import this class from file `src/syncspec/syncspec_text_context.py`:
 ```python
 from dataclasses import dataclass, field
 from typing import Any, Dict
 import networkx as nx
 
 @dataclass
-class SyncspecStringContext:
+class SyncspecTextContext:
     open_delimiter: str
     close_delimiter: str
     log: str
-	G: nx.DiGraph
-	monad: Dict[str, Any]
-	import_path: str
+    G: nx.DiGraph
+    monad: Dict[str, Any]
+    import_path: str
 ```
 
 Do not generate code to initialise the context.
 
-Verify at context at initialization time:
+Verify context in function `make_syncspec_text`:
 - open_delimiter and close_delimiter are not empty strings.
-- log is a valid file path.  The file may or may not exist already.
+- log is a valid file path and the file already exists.
 - G is a valid nx.DiGraph object.
 - monad is a valid dictionary.
 - import_path is a valid directory path.  The directory must exist.
+### Implement the unary function Syncspec Text
 
-### Implement the unary function Syncspec String
-
-In the file `src/syncspec/syncspec_string.py`.
+In the file `src/syncspec/syncspec_text.py`.
 
 Define a closure factory with a unary function with signature:
 
 ```python
-def make_syncspec_string(context: SyncspecStringContext):
-	def syncspec_string(text: Text) -> File
+def make_syncspec_text(context: SyncspecTextContext):
+	def syncspec_text(text: Text) -> File
 ```
 
 Modify this code to implement the function:
@@ -83,7 +82,7 @@ Modify this code to implement the function:
         close_delimiter=context.close_delimiter,
     )
     imbc = ImportBlockContext(
-        path=context.import_path,
+        import_path=context.import_path,
         open_delimiter=context.open_delimiter,
         close_delimiter=context.close_delimiter,
     )
@@ -128,9 +127,9 @@ Modify this code to implement the function:
 	production(facts, rules)
 ```
 
-- The contexts shall be initialised with values from `SyncspecStringContext`.  
-- Context objects (csc, sbc, ibc, etc.) are instantiated once in the factory.  Subsequent calls to `syncspec_string` will carry over state.
-- Use `SyncspecStringContext.log` to set `CombineErrorsContext.text`.
+- The contexts shall be initialised with values from `SyncspecTextContext`.  
+- Context objects (csc, sbc, ibc, etc.) are instantiated once in the factory.  Subsequent calls to `syncspec_text` will carry over state.
+- Use `SyncspecTextContext.log` to set `CombineErrorsContext.text`.
 - Do not modify magic numbers, such as `index=0`.
 - The parameter text shall replace the creation Text object, used to set facts.
 - Return an object of type `File`, use the final value of `CombineStringsContext.text` and the parameter value `text.name`.
@@ -141,7 +140,7 @@ Modify this code to implement the function:
 `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
 ## Test the unary function  
 
-In the file `tests/test_syncspec_string.py`.
+In the file `tests/test_syncspec_text.py`.
 
 - Write pytests to verify the functionality.
 - Tests should be individual functions. Do not define a test class.    

@@ -38,6 +38,16 @@ class SyncspecStringContext:
 	import_path: str
 ```
 
+Import this function from file  `src/syncspec/syncspec_string.py`:
+```python
+def make_syncspec_string(context: SyncspecStringContext):
+	def syncspec_string(text: Text) -> File
+```
+
+The function `make_syncspec_string` is already implemented, it contains: 
+- Logic to write to the log file and graph file.
+- Transformation logic, using the delimiters.
+
 Import this class from file `src/syncspec/syncspec_context.py`:
 ```python
 from dataclasses import dataclass, field
@@ -54,23 +64,22 @@ class SyncspecContext:
 
 Do not generate code to initialise `SyncspecContext`.
 
-Verify at context at initialization time:
+Verify at context in function `make_syncspec`:
 - open_delimiter and close_delimiter are not empty strings.
-- log_file is a valid file path.  The file may or may not exist already.
-- graph_file is a valid file path.  The file may or may not exist already.
+- log_file is a valid file path.  The file does not exist already.
+- graph_file is a valid file path.  The file does not exist already.
 - import_path is a valid directory path.  The directory must exist.
-
 ### Implement the unary function Syncspec
 
-In the file `src/syncspec/syncspec.py`.
+In the file `src/syncspec/syncspec_file.py`.
 
 Define a closure factory with a unary function with signature:
 
 ```python
 from typing import List
 
-def make_syncspec(context: SyncspecContext):
-	def syncspec(text: List[Text]) -> List[File]
+def make_syncspec_file(context: SyncspecContext):
+	def syncspec_file(text: List[Text]) -> List[File]
 ```
 
 - The context parameters are used to set the delimiters.
@@ -84,34 +93,7 @@ def make_syncspec(context: SyncspecContext):
 	- Call `make_syncspec_string` , passing the initialised instance of `SyncspecStringContext`  which returns a function which we call `syncspec_string`.
 	- Call the unary `syncspec_string` function passing the Text object as a parameter.
 	- Add the returned object of type File to the list to be returned.
-
-#### Implement a calling program
-
-Generate a python program `main1.py` that calls `syncspec`.  The main function shall parse keyword parameters:
-`--open_delimiter` with default "{{"
-`--close_delimiter` with default "}}"
-`--log_file` with default "log.txt"
-`--graph_file` with default "graph.dot"
-`--output` required.
-`--import_path` optional.
-And required positional parameter `path`  
-#### Validate the parameters
-
-- `--log_file` must be a valid file path.  The file should not exist.
-- `--graph_file` must be a valid file path.  The file suffix must be `.dot`  . The file should not exist.
-- Verify that output is a path to an existing directory.
-- Verify that path is a path to an existing directory.
-
-Print an informative error message and stop if verification fails.
-
-Construct the syncspec context from the parameters.
-- If the import path is not specified set it to path.
-
-Traverse the directory `path` recursively.  For each markdown  `.md` file encountered create an object of type `Text` and add it to a list.  `Text.text` shall be the file content.  `Text.name` shall be the file path relative to `path`.
-
-Pass the list of `Text` objects to `syncspec`.   A list of `File` objects shall be returned.
-
-Iterate through the returned `File` objects.   Create a file containing `File.text` on the file path constructed from `output` + `/` + `File.name`.
+ 
 ## Package
 
 `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.

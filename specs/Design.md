@@ -120,3 +120,16 @@ class Node:
 ```
 
 
+Import this class from file `src/syncspec/edge.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Edge:
+    directive_type: str
+    key: str
+    line_number: int    
+    name: str
+```
+
+

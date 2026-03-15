@@ -14,6 +14,18 @@ class Node:
     name: str
 ```
 
+Import this class from file `src/syncspec/edge.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Edge:
+    directive_type: str
+    key: str
+    line_number: int    
+    name: str
+```
+
 Import this class from file `src/syncspec/combine_nodes_context.py`:
 ```python
 from dataclasses import dataclass, field
@@ -34,34 +46,36 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_combine_nodes(context: CombineNodesContext):	
-	def combine_nodes(node: Node) -> None
+	def combine_nodes(node: Node) -> Edge
 ```
 
-
-If `node.directive_type` equals "source" then:
+If `node.directive_type` equals "source" or "export" then:
 
 Add a new node to the graph G in the context.
-- The node shall be named `node.name + "_" + node.line_number`
+- The node shall be named `type + "_" + node.name + "_" + node.line_number` where type is `node.directive_type`.
 - Add an attribute key with value `node.key`
 - Add an attribute directive_type with value `node.directive_type`
-- The node label shall be formatted as  `node.name + "\n" + node.line_number`
-- The nodes shall be light blue rectangles.
+- The node label shall be formatted as  `type + "\n" + node.name + "\n" + ":" + node.line_number` where type is `node.directive_type`.
+- The "source" nodes shall be light blue rectangles.  
+- The "export" nodes shall be red rectangles.
 
-If `node.directive_type` equals "include" then:
-
-Search for matching source nodes before adding the new node, then add the new node and edges.
-
-Search the graph for any matching nodes with the attribute key equal to `node.key`  and attribute directive_type with value "source".  
+If `node.directive_type` equals "include" or "import" then:
 
 Add a new node to the graph G in the context.  The include node shall formatted in a similar to the source nodes.  Except:
-- The include nodes shall be light green rectangles.
+- The "include" nodes shall be light green rectangles.
+- The "import" nodes shall be yellow rectangles.
 
-Add edges to the graph G.
-- Create directed edges from the the matching nodes found by the search to the newly added node.
-- The edge label shall be the matching `node.key`.
-#### Assume that:
+In all cases, return an object of type Edge.  Initialise the object with fields from `node`.
+### Note that
 
-The networkx digraph will be rendered as a graphviz dot file.
+- The function adds only nodes to the graph.
+- Names are unique and collisions cannot occur.
+### Assume that
+
+- The networkx digraph will be rendered as a graphviz dot file.
+- Packge pydot is installed.  
+- Graphviz is installed.  
+- Package networkx is installed.
 ## Package
 
 `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.

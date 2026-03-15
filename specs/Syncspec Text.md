@@ -99,6 +99,9 @@ Modify this code to implement the function:
     cnc = CombineNodesContext(
         G=context.G,
     )
+    gec = GraphEdgesContext(
+        G=context.G,
+    )
 
     validate_text = make_validate_text(vtc)
     fragment_text = make_fragment_text(ftc)
@@ -109,6 +112,7 @@ Modify this code to implement the function:
     combine_strings = make_combine_strings(csc)
     combine_errors = make_combine_errors(cec)
     combine_nodes = make_combine_nodes(cnc)
+    graph_edges = make_graph_edges(gec)
 
     facts = [Text(name="freddy", text="""line 1
     {{"source": "a"}}A{{}}
@@ -121,7 +125,7 @@ Modify this code to implement the function:
 
     rules = build_rules(
         [validate_text, fragment_text, create_blocks, source_block, import_block, include_block, combine_strings, combine_errors,
-         combine_nodes])
+         combine_nodes, graph_edges])
 
 	production(facts, rules)
 ```
@@ -183,6 +187,8 @@ import networkx as nx
 
 from src.syncspec.combine_errors import make_combine_errors
 from src.syncspec.combine_errors_context import CombineErrorsContext
+from src.syncspec.graph_edges import make_graph_edges
+from src.syncspec.graph_edges_context import GraphEdgesContext
 from src.syncspec.combine_nodes import make_combine_nodes
 from src.syncspec.combine_nodes_context import CombineNodesContext
 from src.syncspec.combine_strings import make_combine_strings

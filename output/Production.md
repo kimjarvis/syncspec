@@ -107,14 +107,7 @@ import pprint
 def main():
     vtc = ValidateTextContext(
         name="test",
-        open_delimiter="{{",
-        close_delimiter="}}",
-        line_number=1
-    )
-    ftc = FragmentTextContext(
-        name="test",
-        open_delimiter="{{",
-        close_delimiter="}}",
+        open_delimiter="",
         line_number=1
     )
     cbc = CreateBlocksContext(
@@ -127,60 +120,12 @@ def main():
     monad={}
     sbc = SourceBlockContext(
         state=monad,
-        open_delimiter="{{",
-        close_delimiter="}}",
-    )
-    csc = CombineStringsContext(
-        text="",
-    )
-
-    # 2. Create Unary Function bound to context
-    validate_text = make_validate_text(vtc)
-    fragment_text = make_fragment_text(ftc)
-    create_blocks = make_create_blocks(cbc)
-    source_block = make_source_block(sbc)
-    combine_strings = make_combine_strings(csc)
-
-    facts = [Text("""A{{"source": "first"}}C{{}}E{{"include": "first"}}G{{}}I""")]
-
-    # 3. Build Rules
-    rules = build_rules([validate_text,fragment_text,create_blocks, source_block, combine_strings])
-
-    # 4. Run Production (no context passed)
-    result = production(facts, rules)
-    pprint.pp(result)
-    pprint.pp(monad)
-    pprint.pp(csc)
-
-if __name__ == "__main__":
-    main()
-
-
-def main():
-    vtc = ValidateTextContext(
-        name="test",
-        open_delimiter="{{",
-        close_delimiter="}}",
+        open_delimiter="C{{}}C{{"include": "first"}}G",
         line_number=1
     )
     ftc = FragmentTextContext(
         name="test",
-        open_delimiter="{{",
-        close_delimiter="}}",
-        line_number=1
-    )
-    cbc = CreateBlocksContext(
-        name="test",
-        index=0,
-        prefix="",
-        text="",
-        line_number=1,
-    )
-    monad={}
-    sbc = SourceBlockContext(
-        state=monad,
-        open_delimiter="{{",
-        close_delimiter="}}",
+        open_delimiter="",
     )
     csc = CombineStringsContext(
         text="",
@@ -193,7 +138,7 @@ def main():
     source_block = make_source_block(sbc)
     combine_strings = make_combine_strings(csc)
 
-    facts = [Text("""A{{"source": "first"}}C{{}}E{{"include": "first"}}G{{}}I""")]
+    facts = [Text("""A{{"source": "first"}}C{{}}E{{"include": "first"}}C{{}}I""")]
 
     # 3. Build Rules
     rules = build_rules([validate_text,fragment_text,create_blocks, source_block, combine_strings])

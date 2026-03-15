@@ -1,75 +1,92 @@
+# src/syncspec/validate_text.py
 from typing import Union
+import logging
 from src.syncspec.text import Text
 from src.syncspec.validated_text import ValidatedText
-from src.syncspec.error import Error
+from src.syncspec.utilities import format_error
 from src.syncspec.validate_text_context import ValidateTextContext
 
 
 def make_validate_text(context: ValidateTextContext):
-    open_d, close_d = context.open_delimiter, context.close_delimiter
+    open_delim = context.open_delimiter
+    close_delim = context.close_delimiter
 
-    if not isinstance(open_d, str) or not open_d:
-        raise ValueError("Open delimiter must be a non-empty string.")
-    if not isinstance(close_d, str) or not close_d:
-        raise ValueError("Close delimiter must be a non-empty string.")
-    if open_d == close_d:
-        raise ValueError("Delimiters must be distinct.")
-    if open_d in close_d or close_d in open_d:
-        raise ValueError("Delimiters must not overlap structurally.")
+    # --- Context validation (at factory creation) ---
+    if not isinstance(open_delim, str) or not isinstance(close_delim, str):
+        raise ValueError("Delimiters must be valid Unicode strings")
+    if not open_delim or not close_delim:
+        raise ValueError("Delimiters cannot be empty")
+    if open_delim == close_delim:
+        raise ValueError("Open and close delimiters must be distinct")
+    if open_delim in close_delim or close_delim in open_delim:
+        raise ValueError("Delimiters must not overlap structurally")
+    if '\n' in open_delim or '\n' in close_delim:
+        raise ValueError("Delimiters cannot contain newlines")
 
-    def validate_text(text: Text) -> Union[ValidatedText, Error]:
+    def validate_text(text: Text) -> Union[ValidatedText, None]:
         if not isinstance(text.text, str):
-            context.line_number += 0
-            return Error("Text must be a valid Unicode string.", text.name, context.line_number)
+            logging.error(format_error("Text must be a valid Unicode string", text.name, context.line_number))
+            return None
 
-        start_line = context.line_number
         content = text.text
+        lines = content.splitlines(keepends=True) or [''] if content == '' else content.splitlines(keepends=True)
+
+        stack_depth = 0
+        total_pairs = 0
         pos = 0
-        state = 0  # 0: Outside, 1: Inside
-        pairs = 0
-        len_open, len_close = len(open_d), len(close_d)
 
-        while pos <= len(content):
-            idx_open = content.find(open_d, pos)
-            idx_close = content.find(close_d, pos)
+        for line_idx, line in enumerate(lines):
+            current_line_number = context.line_number + line_idx
+            line_start_pos = pos
 
-            if idx_open == -1 and idx_close == -1:
-                break
+            while True:
+                # Find next open or close delimiter in this line (from current pos)
+                rel_pos = pos - line_start_pos
+                if rel_pos >= len(line):
+                    break
 
-            if idx_open != -1 and (idx_close == -1 or idx_open < idx_close):
-                next_idx, is_open = idx_open, True
-                span = len_open
-            else:
-                next_idx, is_open = idx_close, False
-                span = len_close
+                open_at = line.find(open_delim, rel_pos)
+                close_at = line.find(close_delim, rel_pos)
 
-            if is_open:
-                if state == 1:
-                    err_line = start_line + content[:next_idx].count('\n')
-                    context.line_number = start_line + content.count('\n')
-                    return Error("Nested open delimiter detected.", text.name, err_line)
-                state = 1
-            else:
-                if state == 0:
-                    err_line = start_line + content[:next_idx].count('\n')
-                    context.line_number = start_line + content.count('\n')
-                    return Error("Close delimiter found before open delimiter.", text.name, err_line)
-                state = 0
-                pairs += 1
+                # Convert to absolute positions
+                open_abs = line_start_pos + open_at if open_at != -1 else -1
+                close_abs = line_start_pos + close_at if close_at != -1 else -1
 
-            pos = next_idx + span
+                # No more delimiters in this line
+                if open_abs == -1 and close_abs == -1:
+                    break
 
-        if state == 1:
-            err_line = start_line + content.count('\n')
-            context.line_number = err_line
-            return Error("Unclosed open delimiter.", text.name, err_line)
+                # Determine which comes first
+                if (open_abs != -1 and (close_abs == -1 or open_abs < close_abs)):
+                    # Open delimiter found
+                    if stack_depth > 0:
+                        # Nested! Not allowed
+                        logging.error(format_error("Nested delimiters are not allowed", text.name, current_line_number))
+                        return None
+                    stack_depth += 1
+                    pos = open_abs + len(open_delim)
+                else:
+                    # Close delimiter found
+                    if stack_depth == 0:
+                        logging.error(format_error("Unmatched close delimiter", text.name, current_line_number))
+                        return None
+                    stack_depth -= 1
+                    total_pairs += 1
+                    pos = close_abs + len(close_delim)
 
-        if pairs % 2 != 0:
-            err_line = start_line + content.count('\n')
-            context.line_number = err_line
-            return Error("Number of delimiter pairs must be even.", text.name, err_line)
+            pos += len(line) - (len(line) - rel_pos if rel_pos < len(line) else 0)
 
-        context.line_number = start_line + content.count('\n')
-        return ValidatedText(text=text.text, name=text.name)
+        # After processing all lines
+        if stack_depth != 0:
+            # Unbalanced: more opens than closes
+            logging.error(format_error("Unbalanced delimiters", text.name, context.line_number + len(lines) - 1))
+            return None
+
+        if total_pairs % 2 != 0:
+            # Odd number of pairs
+            logging.error(format_error(f"Number of delimiter pairs must be even, found {total_pairs}", text.name, context.line_number))
+            return None
+
+        return ValidatedText(text=content, name=text.name)
 
     return validate_text

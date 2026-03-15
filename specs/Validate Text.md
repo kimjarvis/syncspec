@@ -22,15 +22,10 @@ class ValidatedText:
     name: str
 ```
 
-Import this class from file `src/syncspec/error.py`:
+Import logging.
+Import the function with this signature from file `src/syncspec/utilities.py`:
 ```python
-from dataclasses import dataclass
-
-@dataclass
-class Error:
-    message: str
-    name: str
-    line_number: int
+def format_error(message: str, name: str, line_number: int) -> str:
 ```
 
 Import this class from file `src/syncspec/validate_text_context.py`:
@@ -54,10 +49,9 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_validate_text(context: ValidateTextContext):
-    def validate_text(text: Text) -> Union[ValidatedText, Error]:
+    def validate_text(text: Text) -> Union[ValidatedText, None]:
 ```
 
-### Ensure that
 
 ### Verify the context
 
@@ -76,12 +70,11 @@ def make_validate_text(context: ValidateTextContext):
 
 ### Keep track of line numbers
 
-- Field "line_number" keeps track of line numbers within text.
-- Line numbers are 1-based.  The initial value of ValidateTextContext.line_number is 1.
-- The line number reported when class Error is returned is the line number where the error was detected. 
-- The line number is part of the context shared across multiple calls.
-- The line number acts as a global offset. 
-- "line_number" is based on total newlines in the input even when returning an Error.
+- Field `line_number` keeps track of line numbers within text.
+- Line numbers are 1-based.  The initial value of `ValidateTextContext.line_number` is 1.
+- Empty text increments line_number by 1 (represents one logical line).
+- The line number reported when an error is logged is the line number where the error was detected.  
+- Line Splitting: splitlines(keepends=True) is used to define "lines". This preserves newline characters during slicing and reconstruction.
 ### Verify the text
 
 #### Ensure that:
@@ -92,6 +85,7 @@ def make_validate_text(context: ValidateTextContext):
 	- So, the last delimiter appearing in the text is the close delimiter.
 - Delimiters are not nested, e.g., ensure that input  does not contain `{{A{{B}}C}}`.
 - Ensure that the number of pairs of balanced delimiters is even.  e.g.,
+	- Zero pairs `A` is valid.
 	- One pair `A{{B}}C` is not valid.  
 	- Two pairs `A{{B}}C{{D}}E` is valid.  
 	- Three pairs `A{{B}}C{{D}}E{{F}}G` are not valid.
@@ -99,11 +93,13 @@ def make_validate_text(context: ValidateTextContext):
 ### Note that
 
 Requiring an even number of delimiter pairs is a specific requirement for this application.
-### Error return
+### Errors
 
-Raise a ValueError during factory creation for configuration errors.
+Raise a Value Error during factory creation for configuration errors.
 
-Return Error objects for text validation failures.  When any of the validation conditions are violated return object of type Error with an informative message, a copy of the `Text.name` and the line number on which the error was detected.
+When any of the validation conditions are violated:
+- return None.
+- call `format_error` to format an error messages.  Pass an informative message,   `Text.name` and the line number on which the error was detected.  Use python logging to log the error.
 ### Successful return
 
 Return a `ValidatedText` object.  Copy the `Text.text` field to `ValidatedText.text`.

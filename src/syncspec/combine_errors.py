@@ -1,13 +1,7 @@
 import logging
 from src.syncspec.error import Error
+from src.syncspec.utilities import format_error
 from src.syncspec.combine_errors_context import CombineErrorsContext
-
-def format_error(message: str, name: str, line_number: int) -> str:
-    return (
-        f"{message}\n"
-        f"        Line: {line_number}\n"
-        f"        File: {name}\n\n"
-    )
 
 def make_combine_errors(context: CombineErrorsContext):
     def combine_errors(error: Error) -> None:

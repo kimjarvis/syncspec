@@ -1,0 +1,5 @@
+strict digraph {
+"example.md_2" [key=File, directive_type=source, label="example.md\n2", shape=box, style=filled, fillcolor=lightblue];
+"example1.md_2" [key=File, directive_type=include, label="example1.md\n2", shape=box, style=filled, fillcolor=lightgreen];
+"example.md_2" -> "example1.md_2" [label=File];
+}

@@ -49,8 +49,7 @@ In the file `cli.py`.
 Parse keyword parameters:
 `--open_delimiter` with default "{{"
 `--close_delimiter` with default "}}"
-`--log_file` with default "syncspec.log"
-`--log_level` with default "warning"
+`--log_file` with default "log.txt"
 `--graph_file` with default "graph.dot"
 `--keyvalue_file` with default "keyvalue.json"
 `--output` required.
@@ -59,7 +58,6 @@ And required positional parameter `path`
 #### Validate the parameters
 
 - `--log_file` must be a valid file path.  Create and empty file.  If the file already exists it shall be overwritten.
-- `--log_level` must be a valid python logging level, ignore case.  
 - `--keyvalue_file` must be a valid file path.  Create and empty file.  If the file already exists it shall be overwritten.
 - `--graph_file` must be a valid file path.  The file suffix must be `.dot`  . Create and empty file.  If the file already exists it shall be overwritten.
 - Verify that output is a path to an existing directory.
@@ -67,18 +65,13 @@ And required positional parameter `path`
 
 Validation failures shall print an informative message to stdout and terminate via sys.exit(1).
 
-Set up Python logging:
-- Use basic configuration with format "%(levelname)s - %(message)s".  
-- Set the log file path.  
-- Set the log level.
-
 Construct `SyncspecListContext` from the parameters.
 
  If `--import_path` is omitted, it defaults to the value of the positional path argument.
 
 Traverse the directory `path` recursively.  For each markdown  `.md` file encountered create an object of type `Text` and add it to a list.  `Text.text` shall be the file content.  `Text.name` shall be the file path relative to `path`.
 
-Pass the list of `Text` objects to `syncspec_list`.   
+Pass the list of `Text` objects to `syncspec`.   
 
 The function `syncspec_list` returns a tuple:
 
@@ -90,11 +83,11 @@ Iterate through the returned `File` objects.   Create a file containing `File.te
 
 Catch any value error exceptions raised in `make_syncspec_list` and `syncspec_list`.  Print the message to stdout and terminate via sys.exit(1).
 
-The second tuple item is a string.  Ignore it.
+The second tuple item is a string.  Write the string to the file specified by `--log_file`.
 
-The third tuple item is of type `nx.DiGraph`.  Use it to create a Grapviz dot file.  Use `nx.nx_pydot.write_dot` to write the file specified by `--graph_file`.
+The third tuple item is a nx.DiGraph.  Use it to create a grapviz dot file.  Use `nx.nx_pydot.write_dot` to write the file specified by `--graph_file`.
 
-The forth tuple item is a dictionary with string keys.  Convert the dictionary to JSON.  Write to the file specified by `--keyvalue_file`.  Catch any exception raised by the conversion.  If an exception is raised print an informative message to `stderr` and terminate via `sys.exit(1)`. 
+The forth tuple item is a dictionary with string keys.  Convert the dictionary to json.  Write to the file specified by `--keyvalue_file`.  Catch any exception raised by the conversion.  If an exception is raised print an informative message to stdout and terminate via sys.exit(1). 
 ## Assume
 
 - UTF-8 encoding is used for all file I/O.

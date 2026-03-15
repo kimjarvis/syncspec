@@ -1,0 +1,6 @@
+from dataclasses import dataclass
+
+@dataclass
+class ValidatedText:
+    text: str
+    name: str

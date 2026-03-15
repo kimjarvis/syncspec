@@ -69,8 +69,6 @@ def make_syncspec_text(context: SyncspecTextContext) -> Callable[[Text], File]:
     def syncspec_text(text: Text) -> File:
         facts = [text]
         production(facts, rules)
-
         return File(text=csc.text, name=text.name)
-
 
     return syncspec_text

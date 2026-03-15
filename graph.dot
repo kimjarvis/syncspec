@@ -1,8 +1,2 @@
 strict digraph {
-"source_example.md_2" [key=File, directive_type=source, label="source\nexample.md\n:2", shape=rectangle, style=filled, fillcolor=lightblue];
-"include_example1.md_2" [key=File, directive_type=include, label="include\nexample1.md\n:2", shape=rectangle, style=filled, fillcolor=lightgreen];
-"export_sub/error.py_0" [key="sub/error.py", directive_type=export, label="export\nsub/error.py\n:0", shape=rectangle, style=filled, fillcolor=red];
-"import_example3.md_2" [key="sub/error.py", directive_type=import, label="import\nexample3.md\n:2", shape=rectangle, style=filled, fillcolor=yellow];
-"source_example.md_2" -> "include_example1.md_2";
-"export_sub/error.py_0" -> "import_example3.md_2";
 }

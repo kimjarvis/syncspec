@@ -75,7 +75,7 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_import_block(context: ImportBlockContext):	
-	def import_block(block: Block) -> Union[Tuple[String, Node], Block, Error]:
+	def import_block(block: Block) -> Union[Tuple[String, Node, Node], Block, Error]:
 ```
 
 Check that the value of `block.directive["import"]` is a string.
@@ -91,15 +91,29 @@ The value of `block.directive["import"]` is a relative file or symbolic link pat
 
 If any of these conditions are not met, return an object of type Error, copy the block line_number and name into Error and add an informative message.
 
-Read the content of the file into string variable v.
+Read the content of the file into string variable `v`.
 
-If dictionary `Block.directive` contains a key "head" with an integer value h with then:
-- Remove the first h lines from v.
-- If it is not possible to remove h lines from v then return an object of type Error, copy the block line_number and name into Error and add an informative message.
-And then, if dictionary `Block.directive` contains a key "tail" with an integer value t with then:
-- Remove the last t lines from v. If it is not possible to remove t lines from v then return an object of type Error, copy the block line_number and name into Error and add an informative message.
+Copy string `block.text` to `u`.
 
-First apply head then apply tail to the result. Negative head or tail values shall be rejected as invalid, head=0 or tail=0 are valid no-ops.
+If dictionary `Block.directive` contains a key "head" with an integer value call it head, otherwise set `head=0`.  
+
+Let top be the first head lines of `u`.
+
+If dictionary `Block.directive` contains a key "tail" with an integer value call it tail, otherwise set `tail=0`.
+
+Let bottom be the last tail lines of `u`.
+
+Assume that:
+
+- Directive values `Block.directive["head"]=0`  and `Block.directive["head"]=0` are valid no-ops even when `u` is an empty string.
+ 
+Ensure that:
+
+- `v` is a string.
+- Strings top and bottom do not overlap.  Overlap is defined strictly as `head + tail > total_lines`. 
+- Negative head or tail values shall be rejected as invalid.
+
+If any these conditions are violated return an object of type Error, copy the block `line_number` and `name` fields into Error and add an informative message.
 
 Return a tuple containing object of type String:
 - Copy `line_number` from Block.
@@ -109,20 +123,31 @@ Return a tuple containing object of type String:
 1. `ImportBlockContext.open_delimiter`
 2. `block.prefix`
 3. `ImportBlockContext.close_delimiter`
-4. The value v
-5. `ImportBlockContext.open_delimiter`
-6. `block.suffix`
-7. `ImportBlockContext.close_delimiter`
+4. `top`, the first h lines of `block.text`
+5. The value of v
+6. `bottom` the last t lines of `block.text`
+7. `ImportBlockContext.open_delimiter`
+8. `block.suffix`
+9. `ImportBlockContext.close_delimiter`
 
 The tuple shall also contain an object of type Node:
+- The `line_number` shall be zero.
+- `name` shall be the value of `block.directive["import"]` 
+- Set the directive type to "export"
+- Set the key to  the value of `block.directive["import"]`
+
+The tuple shall also contain another object of type Node:
 - Copy `line_number` from Block.
 - Copy `name` from Block
 - Set the directive type to "import"
-- Set the key to  the value of `block.directive["import"]`
+- Set the key to  the value of `block.directive["import"]` 
 
 If dictionary `Block.directive` does not contains a key "import" then return an object of type Block:
 - Return the input parameter unchanged.
+#### Assume that
 
+- Line Splitting: splitlines(keepends=True) is used to define "lines". This preserves newline characters during slicing and reconstruction.
+- Integer Validation: Boolean values are excluded from integer checks for head/tail (since bool is a subclass of int in Python).
 ## Package
 
 `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.

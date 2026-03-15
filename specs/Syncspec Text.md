@@ -42,7 +42,6 @@ Do not generate code to initialise the context.
 
 Verify context in function `make_syncspec_text`:
 - open_delimiter and close_delimiter are not empty strings.
-- log is a valid file path and the file already exists.
 - G is a valid nx.DiGraph object.
 - monad is a valid dictionary.
 - import_path is a valid directory path.  The directory must exist.

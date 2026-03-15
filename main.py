@@ -1,8 +1,8 @@
 import argparse
 import sys
 from pathlib import Path
-from src.syncspec.syncspec import make_syncspec
-from src.syncspec.syncspec_context import SyncspecContext
+from src.syncspec.syncspec_list import make_syncspec
+from src.syncspec.syncspec_list_context import SyncspecContext
 from src.syncspec.text import Text
 
 

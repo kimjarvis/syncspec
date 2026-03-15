@@ -1,3 +1,6 @@
-First
-Before{{"import": "sub/error.py", "head": 1, "tail": 1}}Content{{}}After
+Include file `sub/error.py`:
+Before{{"import": "sub/error.py", "head": 2, "tail": 2}}
+```python
+```
+ {{}}After
 Last

@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Union, Tuple, Dict, Any
+from typing import Union, Tuple, Any
 
 from src.syncspec.node import Node
 from src.syncspec.error import Error
@@ -10,98 +10,74 @@ from src.syncspec.import_block_context import ImportBlockContext
 
 
 def make_import_block(context: ImportBlockContext):
-    def import_block(block: Block) -> Union[Tuple[String, Node], Block, Error]:
+    def import_block(block: Block) -> Union[Tuple[String, Node, Node], Block, Error]:
+        # Check for import directive
         if "import" not in block.directive:
             return block
 
-        path = block.directive["import"]
-        if not isinstance(path, str):
-            return Error("Import path must be a string", block.name, block.line_number)
+        import_path_val = block.directive["import"]
+        if not isinstance(import_path_val, str):
+            return Error(message="Import path must be a string", name=block.name, line_number=block.line_number)
 
-        if os.path.isabs(path):
-            return Error("Absolute file paths are not allowed", block.name, block.line_number)
-
-        import_dir = Path(context.import_path).resolve()
-
-        # Build the path relative to import directory (do NOT resolve symlinks yet)
+        # Resolve paths securely
         try:
-            import_path = import_dir / path
-            # Normalize without following symlinks
-            normalized_path = Path(os.path.normpath(import_path))
-        except Exception as e:
-            return Error(f"Failed to resolve path: {e}", block.name, block.line_number)
+            base_path = Path(context.import_path).resolve()
+            target_path = (base_path / import_path_val).resolve()
+            # Ensure target is within base_path
+            target_path.relative_to(base_path)
+        except (ValueError, OSError):
+            return Error(message="Invalid import path or traversal detected", name=block.name,
+                         line_number=block.line_number)
 
-        # Check that the import path itself (not resolved target) is within import directory
-        try:
-            normalized_path.relative_to(import_dir)
-        except ValueError:
-            return Error(f"File path escapes import directory: {path}", block.name, block.line_number)
-
-        # Now resolve symlinks for existence and file checks
-        try:
-            resolved_path = import_path.resolve(strict=True)
-        except FileNotFoundError:
-            return Error(f"File does not exist: {path}", block.name, block.line_number)
-        except Exception as e:
-            return Error(f"Failed to resolve path: {e}", block.name, block.line_number)
-
-        # Check that resolved symlink target is also within import directory
-        try:
-            resolved_path.relative_to(import_dir)
-        except ValueError:
-            return Error(f"Symlink target escapes import directory: {path}", block.name, block.line_number)
-
-        if not resolved_path.is_file():
-            return Error(f"Not a text file: {path}", block.name, block.line_number)
-        if not os.access(resolved_path, os.R_OK):
-            return Error(f"File is not readable: {path}", block.name, block.line_number)
+        # Verify file existence and readability
+        if not target_path.exists() or not target_path.is_file():
+            return Error(message="Import file does not exist", name=block.name, line_number=block.line_number)
 
         try:
-            with open(resolved_path, "r", encoding="utf-8") as f:
-                v = f.read()
-        except UnicodeDecodeError:
-            return Error(f"File is not valid UTF-8 text: {path}", block.name, block.line_number)
-        except Exception as e:
-            return Error(f"Failed to read file: {e}", block.name, block.line_number)
+            v = target_path.read_text(encoding='utf-8')
+        except (PermissionError, UnicodeDecodeError):
+            return Error(message="File not readable or not valid UTF-8 text", name=block.name,
+                         line_number=block.line_number)
 
-        lines = v.splitlines(keepends=True)
+        # Process head/tail directives
+        head = block.directive.get("head", 0)
+        tail = block.directive.get("tail", 0)
 
-        # Apply head first, then tail (per specification)
-        if "head" in block.directive:
-            h = block.directive["head"]
-            if not isinstance(h, int) or h < 0:
-                return Error(f"Invalid head value: {h}", block.name, block.line_number)
-            if h > len(lines):
-                return Error(f"Cannot remove {h} lines from {len(lines)} line(s)", block.name, block.line_number)
-            lines = lines[h:]
+        if not isinstance(head, int) or not isinstance(tail, int):
+            return Error(message="Head and tail must be integers", name=block.name, line_number=block.line_number)
 
-        if "tail" in block.directive:
-            t = block.directive["tail"]
-            if not isinstance(t, int) or t < 0:
-                return Error(f"Invalid tail value: {t}", block.name, block.line_number)
-            if t > len(lines):
-                return Error(f"Cannot remove {t} lines from {len(lines)} line(s)", block.name, block.line_number)
-            lines = lines[:-t] if t > 0 else lines
+        if head < 0 or tail < 0:
+            return Error(message="Head and tail cannot be negative", name=block.name, line_number=block.line_number)
 
-        v = "".join(lines)
+        u = block.text
+        lines = u.splitlines(keepends=True)
+        total_lines = len(lines)
 
-        s_text = (
+        if head + tail > total_lines:
+            return Error(message="Head and tail overlap", name=block.name, line_number=block.line_number)
+
+        top = "".join(lines[:head])
+        bottom = "".join(lines[-tail:] if tail > 0 else [])
+
+        # Construct result String
+        # Note: Spec specifies open_delimiter for step 7
+        text = (
                 context.open_delimiter +
                 block.prefix +
                 context.close_delimiter +
+                top +
                 v +
+                bottom +
                 context.open_delimiter +
                 block.suffix +
                 context.close_delimiter
         )
-        string_obj = String(text=s_text, line_number=block.line_number, name=block.name)
-        node_obj = Node(
-            directive_type="import",
-            key=path,
-            line_number=block.line_number,
-            name=block.name
-        )
+        res_string = String(text=text, line_number=block.line_number, name=block.name)
 
-        return (string_obj, node_obj)
+        # Construct Nodes
+        node_export = Node(directive_type="export", key=import_path_val, line_number=0, name=import_path_val)
+        node_import = Node(directive_type="import", key=import_path_val, line_number=block.line_number, name=block.name)
+
+        return (res_string, node_export, node_import)
 
     return import_block

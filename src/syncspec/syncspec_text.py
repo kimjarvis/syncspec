@@ -1,6 +1,6 @@
 import os
 import networkx as nx
-from typing import Any, Dict, Callable
+from typing import Dict, Any
 
 from src.syncspec.text import Text
 from src.syncspec.file import File
@@ -27,29 +27,56 @@ from src.syncspec.combine_nodes_context import CombineNodesContext
 from src.syncspec.production import build_rules, production
 
 
-def make_syncspec_text(context: SyncspecTextContext) -> Callable[[Text], File]:
+def make_syncspec_text(context: SyncspecTextContext):
     if not context.open_delimiter or not context.close_delimiter:
         raise ValueError("Delimiters cannot be empty")
-    if not os.path.isfile(context.log):
-        raise ValueError(f"Log file does not exist: {context.log}")
     if not isinstance(context.G, nx.DiGraph):
         raise ValueError("G must be a nx.DiGraph")
     if not isinstance(context.monad, dict):
         raise ValueError("monad must be a dict")
     if not os.path.isdir(context.import_path):
-        raise ValueError(f"Import path does not exist: {context.import_path}")
+        raise ValueError("import_path must be a valid directory")
 
-    vtc = ValidateTextContext(open_delimiter=context.open_delimiter, close_delimiter=context.close_delimiter, line_number=1)
-    ftc = FragmentTextContext(open_delimiter=context.open_delimiter, close_delimiter=context.close_delimiter, line_number=1)
-    cbc = CreateBlocksContext(index=0, prefix="", text="", line_number=1)
-    sbc = SourceBlockContext(state=context.monad, open_delimiter=context.open_delimiter, close_delimiter=context.close_delimiter)
-    imbc = ImportBlockContext(import_path=context.import_path, open_delimiter=context.open_delimiter, close_delimiter=context.close_delimiter)
-    ibc = IncludeBlockContext(state=context.monad, open_delimiter=context.open_delimiter, close_delimiter=context.close_delimiter)
-    csc = CombineStringsContext(text="")
-    cec = CombineErrorsContext(text=context.log)
-    cnc = CombineNodesContext(G=context.G)
-
-    context.csc = csc  # Attach for test access
+    vtc = ValidateTextContext(
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
+        line_number=1
+    )
+    ftc = FragmentTextContext(
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
+        line_number=1
+    )
+    cbc = CreateBlocksContext(
+        index=0,
+        prefix="",
+        text="",
+        line_number=1,
+    )
+    sbc = SourceBlockContext(
+        state=context.monad,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
+    )
+    imbc = ImportBlockContext(
+        import_path=context.import_path,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
+    )
+    ibc = IncludeBlockContext(
+        state=context.monad,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
+    )
+    csc = CombineStringsContext(
+        text="",
+    )
+    cec = CombineErrorsContext(
+        text=context.log,
+    )
+    cnc = CombineNodesContext(
+        G=context.G,
+    )
 
     validate_text = make_validate_text(vtc)
     fragment_text = make_fragment_text(ftc)
@@ -61,11 +88,15 @@ def make_syncspec_text(context: SyncspecTextContext) -> Callable[[Text], File]:
     combine_errors = make_combine_errors(cec)
     combine_nodes = make_combine_nodes(cnc)
 
-    rules = build_rules([validate_text, fragment_text, create_blocks, source_block, import_block, include_block, combine_strings, combine_errors, combine_nodes])
+    rules = build_rules(
+        [validate_text, fragment_text, create_blocks, source_block, import_block, include_block, combine_strings,
+         combine_errors,
+         combine_nodes])
 
     def syncspec_text(text: Text) -> File:
         facts = [text]
         production(facts, rules)
+        context._csc = csc  # Attach for testing
         return File(text=csc.text, name=text.name)
 
     return syncspec_text

@@ -1,4 +1,3 @@
-import os
 import pprint
 import networkx as nx
 import pytest
@@ -25,33 +24,25 @@ from src.syncspec.import_block import make_import_block
 from src.syncspec.import_block_context import ImportBlockContext
 from src.syncspec.syncspec_text_context import SyncspecTextContext
 from src.syncspec.syncspec_text import make_syncspec_text
+from src.syncspec.file import File
 
-@pytest.mark.parametrize("input_text, expected_text", [
-    (Text(name="freddy", text="""line 1
+
+@pytest.mark.parametrize("name,text_content", [
+    ("freddy", """line 1
     {{"source": "a"}}A{{}}
     {{"source": "b"}}B{{}}
     line 2
     {{"include": "a"}}{{}} 
     {{"include": "b"}}{{}}
     line 3"""),
-     """line 1
-    {{"source": "a"}}A{{}}
-    {{"source": "b"}}B{{}}
-    line 2
-    {{"include": "a"}}A{{}} 
-    {{"include": "b"}}B{{}}
-    line 3""")
 ])
-def test_syncspec_text_freedy(input_text, expected_text):
+def test_syncspec_text(name, text_content):
     open_delimiter = "{{"
     close_delimiter = "}}"
     log = "log.txt"
     G = nx.DiGraph()
     monad = {}
     import_path = "."
-
-    with open(log, 'w') as f:
-        pass
 
     context = SyncspecTextContext(
         open_delimiter=open_delimiter,
@@ -63,7 +54,19 @@ def test_syncspec_text_freedy(input_text, expected_text):
     )
 
     syncspec_text = make_syncspec_text(context)
+    input_text = Text(name=name, text=text_content)
     result = syncspec_text(input_text)
 
-    assert result.name == input_text.name
-    assert context.csc.text == expected_text
+    assert isinstance(result, File)
+    assert result.name == name
+
+    expected_csc = CombineStringsContext(text='line 1\n'
+                                              '    {{"source": "a"}}A{{}}\n'
+                                              '    {{"source": "b"}}B{{}}\n'
+                                              '    line 2\n'
+                                              '    {{"include": "a"}}A{{}} \n'
+                                              '    {{"include": "b"}}B{{}}\n'
+                                              '    line 3')
+
+    assert hasattr(context, '_csc')
+    assert context._csc.text == expected_csc.text

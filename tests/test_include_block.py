@@ -7,60 +7,32 @@ from src.syncspec.node import Node
 from src.syncspec.error import Error
 
 
-@pytest.mark.parametrize(
-    "directive, state, expected_type",
-    [
-        ({}, {}, Block),
-        ({"include": 123}, {}, Error),
-        ({"include": "missing"}, {}, Error),
-        ({"include": "key"}, {"key": 123}, Error),
-        ({"include": "key", "head": 10}, {"key": "a\nb"}, Error),
-        ({"include": "key", "tail": 10}, {"key": "a\nb"}, Error),
-        ({"include": "key"}, {"key": "content"}, tuple),
-        ({"include": "key", "head": 1}, {"key": "a\nb"}, tuple),
-        ({"include": "key", "tail": 1}, {"key": "a\nb"}, tuple),
-    ],
-)
-def test_include_block_logic(directive, state, expected_type):
-    ctx = IncludeBlockContext(state=state, open_delimiter="{", close_delimiter="}")
-    block = Block(
-        directive=directive,
-        prefix="pre",
-        suffix="suf",
-        text="",
-        line_number=1,
-        name="test",
-    )
-    func = make_include_block(ctx)
-    result = func(block)
+@pytest.mark.parametrize("directive,expected_type", [
+    ({}, Block),
+    ({"include": 123}, Error),
+    ({"include": "missing"}, Error),
+    ({"include": "key", "head": -1}, Error),
+    ({"include": "key", "tail": -1}, Error),
+    ({"include": "key", "head": 5, "tail": 5}, Error),
+    ({"include": "key", "head": True}, Error),
+])
+def test_include_block_variants(directive, expected_type):
+    ctx = IncludeBlockContext(state={"key": "VAL"}, open_delimiter="[", close_delimiter="]")
+    block = Block(directive=directive, prefix="", suffix="", text="A\nB\nC\n", line_number=1, name="test")
+    result = make_include_block(ctx)(block)
     assert isinstance(result, expected_type)
 
-    if expected_type is tuple:
-        s, n = result
-        assert isinstance(s, String)
-        assert isinstance(n, Node)
-        assert n.directive_type == "include"
-        assert n.key == directive["include"]
-    elif expected_type is Error:
-        assert result.line_number == 1
-        assert result.name == "test"
-    elif expected_type is Block:
-        assert result is block
 
-
-def test_include_block_text_construction():
-    ctx = IncludeBlockContext(state={"k": "line1\nline2"}, open_delimiter="[", close_delimiter="]")
+def test_include_block_success():
+    ctx = IncludeBlockContext(state={"key": "INSERT"}, open_delimiter="<", close_delimiter=">")
     block = Block(
-        directive={"include": "k", "head": 1},
-        prefix="P",
-        suffix="S",
-        text="",
-        line_number=5,
-        name="N",
+        directive={"include": "key", "head": 1, "tail": 1},
+        prefix="p", suffix="s",
+        text="1\n2\n3\n", line_number=10, name="blk"
     )
-    func = make_include_block(ctx)
-    result = func(block)
+    result = make_include_block(ctx)(block)
     assert isinstance(result, tuple)
-    s, _ = result
-    assert s.text == "[P]line2[S]"
-    assert s.line_number == 5
+    s, n = result
+    assert isinstance(s, String) and isinstance(n, Node)
+    assert s.text == "<p>1\nINSERT3\n<s>"
+    assert n.directive_type == "include" and n.key == "key"

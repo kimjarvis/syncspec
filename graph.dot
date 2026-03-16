@@ -1,7 +1,6 @@
 strict digraph {
-"include_Production.md_144" [key=first, directive_type=include, label="include\nProduction.md\n:144", shape=rectangle, style=filled, fillcolor=lightgreen];
-"source_Production.md_196" [key=first, directive_type=source, label="source\nProduction.md\n:196", shape=rectangle, style=filled, fillcolor=lightblue];
-"include_Production.md_196" [key=first, directive_type=include, label="include\nProduction.md\n:196", shape=rectangle, style=filled, fillcolor=lightgreen];
-"source_Production.md_196" -> "include_Production.md_144";
-"source_Production.md_196" -> "include_Production.md_196";
+"export_src/syncspec/combine_nodes_context.py_0" [key="src/syncspec/combine_nodes_context.py", directive_type=export, label="export\nsrc/syncspec/combine_nodes_context.py\n:0", shape=rectangle, style=filled, fillcolor=red];
+"import_unclosed.md_2" [key="src/syncspec/combine_nodes_context.py", directive_type=import, label="import\nunclosed.md\n:2", shape=rectangle, style=filled, fillcolor=yellow];
+"source_source.md_2" [key="combine_nodes_context", directive_type=source, label="source\nsource.md\n:2", shape=rectangle, style=filled, fillcolor=lightblue];
+"export_src/syncspec/combine_nodes_context.py_0" -> "import_unclosed.md_2";
 }

@@ -1,6 +1,5 @@
 Import this class from file `src/syncspec/combine_nodes_context.py`:
-<!-- {= "import": "src/syncspec/combine_nodes_context.py", "head": 2, "tail": 2 =} -->
-```python
+<!-- {= "source": "combine_nodes_context", "head": 1, "tail": 1 =} -->
 from dataclasses import dataclass, field
 from typing import Any, Dict
 import networkx as nx
@@ -8,5 +7,4 @@ import networkx as nx
 @dataclass
 class CombineNodesContext:
 	G: nx.DiGraph
-```
 <!-- {==} -->

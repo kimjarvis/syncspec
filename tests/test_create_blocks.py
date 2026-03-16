@@ -1,59 +1,70 @@
 import pytest
 from src.syncspec.create_blocks import make_create_blocks
-from src.syncspec.create_blocks_context import CreateBlocksContext
 from src.syncspec.fragment import Fragment
 from src.syncspec.string import String
 from src.syncspec.block import Block
-from src.syncspec.error import Error
+from src.syncspec.create_blocks_context import CreateBlocksContext
 
 
-@pytest.mark.parametrize("index, exp_type", [
-    (0, String), (1, type(None)), (2, type(None)), (3, Block)
+@pytest.mark.parametrize("index, expected_type, update_context", [
+    (0, String, False),
+    (1, type(None), True),
+    (2, type(None), True),
+    (3, Block, False),
 ])
-def test_state_sequence(index, exp_type):
-    ctx = CreateBlocksContext(index=index, prefix="", text="", line_number=0)
-    fn = make_create_blocks(ctx)
-    frag = Fragment(text="{}", line_number=1, name="test")
+def test_state_transitions(index, expected_type, update_context):
+    context = CreateBlocksContext(index=index, prefix="", text="", line_number=0)
+    create_blocks = make_create_blocks(context)
+    fragment = Fragment(text="{}", line_number=10, name="test")
 
-    # Pre-fill context for state 3
-    if index == 3:
-        ctx.prefix = "{}"
-        ctx.text = "body"
-        ctx.line_number = 1
+    result = create_blocks(fragment)
 
-    result = fn(frag)
-    assert isinstance(result, exp_type)
-    assert ctx.index == index + 1
+    assert isinstance(result, expected_type) if expected_type is not type(None) else result is None
+    assert context.index == index + 1
 
 
-@pytest.mark.parametrize("prefix, suffix, expect_error", [
-    ("{}", "{}", False),
-    ("", "", False),
-    ("invalid", "{}", True),
-    ("{}", "invalid", True),
-    ('{"key": null}', "{}", False),
-])
-def test_json_parsing(prefix, suffix, expect_error):
-    ctx = CreateBlocksContext(index=3, prefix=prefix, text="body", line_number=1)
-    fn = make_create_blocks(ctx)
-    frag = Fragment(text=suffix, line_number=2, name="json_test")
+def test_block_json_merge():
+    context = CreateBlocksContext(index=3, prefix='{"a": 1}', text="body", line_number=5)
+    create_blocks = make_create_blocks(context)
+    fragment = Fragment(text='{"b": 2}', line_number=10, name="block_name")
 
-    result = fn(frag)
-    if expect_error:
-        assert isinstance(result, Error)
-    else:
-        assert isinstance(result, Block)
-        assert isinstance(result.directive, dict)
+    result = create_blocks(fragment)
+
+    assert isinstance(result, Block)
+    assert result.directive == {"a": 1, "b": 2}
+    assert result.name == "block_name"
+    assert result.line_number == 5
+
+
+def test_block_json_wrap_braces():
+    # JSON fragments require quoted keys. 'a: 1' is invalid JSON even with braces.
+    context = CreateBlocksContext(index=3, prefix='"a": 1', text="body", line_number=5)
+    create_blocks = make_create_blocks(context)
+    fragment = Fragment(text='"b": 2', line_number=10, name="block_name")
+
+    result = create_blocks(fragment)
+
+    assert isinstance(result, Block)
+    assert result.directive == {"a": 1, "b": 2}
+
+
+def test_block_json_error():
+    context = CreateBlocksContext(index=3, prefix='invalid::', text="body", line_number=5)
+    create_blocks = make_create_blocks(context)
+    fragment = Fragment(text='{}', line_number=10, name="block_name")
+
+    result = create_blocks(fragment)
+
+    assert result is None
+    assert context.index == 4
 
 
 def test_none_key_rejection():
-    # Simulating a case where None key might exist (though standard json prevents it)
-    # We test the validation logic explicitly if _parse_json were modified,
-    # but standard json.loads won't produce None keys.
-    # This test verifies the Block creation path works normally.
-    ctx = CreateBlocksContext(index=3, prefix='{"a": 1}', text="body", line_number=1)
-    fn = make_create_blocks(ctx)
-    frag = Fragment(text='{"b": 2}', line_number=2, name="merge_test")
-    result = fn(frag)
+    # JSON keys are always strings; None keys are impossible via json.loads.
+    # This test verifies successful parsing of valid JSON.
+    context = CreateBlocksContext(index=3, prefix='{"key": 1}', text="body", line_number=5)
+    create_blocks = make_create_blocks(context)
+    fragment = Fragment(text='{}', line_number=10, name="block_name")
+
+    result = create_blocks(fragment)
     assert isinstance(result, Block)
-    assert result.directive == {"a": 1, "b": 2}

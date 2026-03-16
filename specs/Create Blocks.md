@@ -2,15 +2,10 @@
 
 ## Functional specification
 
-Import this class from file `src/syncspec/error.py`:
+Import logging.
+Import the function with this signature from file `src/syncspec/utilities.py`:
 ```python
-from dataclasses import dataclass
-
-@dataclass
-class Error:
-    message: str
-    name: str
-    line_number: int
+def format_error(message: str, name: str, line_number: int) -> str:
 ```
 
 Import this class from file `src/syncspec/fragment.py`:
@@ -76,7 +71,7 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_create_blocks(context: CreateBlocksContext):	
-	def create_blocks(fragment: Fragment) -> Union[Block, String, None, Error]:
+	def create_blocks(fragment: Fragment) -> Union[Block, String, None]:
 ```
 
 The field `index` acts as a global counter of the number of function calls.  Index is incremented after processing the current state to ensure the modulo check corresponds to the current call count (0-based).
@@ -93,7 +88,7 @@ If index mod 4 equals 1 then return None.
 If index mod 4 equals 2 then return None.
 - Copy the fragment text into `CreateBlocksContext.text`
 
-If index mod 4 equals 3 then return an object of type Block or Error.
+If index mod 4 equals 3 then return an object of type Block or return None
 - Copy  `CreateBlocksContext.prefix` and store it in `Block.prefix`
 - Copy  `CreateBlocksContext.text` and store it in `Block.text`
 - Copy  `Fragment.text` and store it in `Block.suffix`
@@ -104,9 +99,10 @@ If index mod 4 equals 3 then return an object of type Block or Error.
 - Combine the dictionaries and store in `Block.directive`.
 #### Conversion errors
 
-- If an error occurs converting the strings to JSON or converting the JSON to a dictionary, return an object of type Error, otherwise return an object of type Block.
-- Copy the context line_number from the context into Error and add an informative text message.
-- Copy the   `Fragment.name` into Error.
+If an error occurs when converting the strings to JSON or when converting the JSON to a dictionary.
+- return None.
+- call `format_error` to format an error messages.  Pass an informative message,   `Fragment.name` and the line number on which the error was detected.  Use python logging to log the error.
+
 #### Assume that
 
 - Ensure that keys are valid strings.  Reject dictionaries containing None keys.

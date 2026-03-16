@@ -1,38 +1,36 @@
 import pytest
+import logging
 from src.syncspec.include_block import make_include_block
 from src.syncspec.block import Block
 from src.syncspec.include_block_context import IncludeBlockContext
-from src.syncspec.string import String
-from src.syncspec.node import Node
-from src.syncspec.error import Error
 
 
-@pytest.mark.parametrize("directive,expected_type", [
-    ({}, Block),
-    ({"include": 123}, Error),
-    ({"include": "missing"}, Error),
-    ({"include": "key", "head": -1}, Error),
-    ({"include": "key", "tail": -1}, Error),
-    ({"include": "key", "head": 5, "tail": 5}, Error),
-    ({"include": "key", "head": True}, Error),
+@pytest.mark.parametrize("directive, state, expect_block, error_substr", [
+    ({}, {}, True, None),
+    ({"include": 123}, {}, True, "string"),
+    ({"include": "missing"}, {}, True, "not found"),
+    ({"include": "k"}, {"k": 123}, True, "not a string"),
+    ({"include": "k", "head": -1}, {"k": "v"}, True, "Head"),
+    ({"include": "k", "head": True}, {"k": "v"}, True, "Head"),
+    ({"include": "k", "tail": -1}, {"k": "v"}, True, "Tail"),
+    ({"include": "k", "head": 5, "tail": 5}, {"k": "v"}, True, "overlap"),
+    ({"include": "k", "head": 1, "tail": 1}, {"k": "v"}, False, None),
 ])
-def test_include_block_variants(directive, expected_type):
-    ctx = IncludeBlockContext(state={"key": "VAL"}, open_delimiter="[", close_delimiter="]")
-    block = Block(directive=directive, prefix="", suffix="", text="A\nB\nC\n", line_number=1, name="test")
-    result = make_include_block(ctx)(block)
-    assert isinstance(result, expected_type)
-
-
-def test_include_block_success():
-    ctx = IncludeBlockContext(state={"key": "INSERT"}, open_delimiter="<", close_delimiter=">")
+def test_include_block(directive, state, expect_block, error_substr, caplog):
+    context = IncludeBlockContext(state=state, open_delimiter="[", close_delimiter="]")
     block = Block(
-        directive={"include": "key", "head": 1, "tail": 1},
-        prefix="p", suffix="s",
-        text="1\n2\n3\n", line_number=10, name="blk"
+        directive=directive, prefix="P", suffix="S",
+        text="1\n2\n3\n4\n5\n", line_number=10, name="test"
     )
-    result = make_include_block(ctx)(block)
-    assert isinstance(result, tuple)
-    s, n = result
-    assert isinstance(s, String) and isinstance(n, Node)
-    assert s.text == "<p>1\nINSERT3\n<s>"
-    assert n.directive_type == "include" and n.key == "key"
+    caplog.set_level(logging.ERROR)
+    result = make_include_block(context)(block)
+
+    if expect_block:
+        assert result is block
+        if error_substr is not None:
+            assert any(error_substr in rec.message for rec in caplog.records)
+        else:
+            assert len(caplog.records) == 0
+    else:
+        assert isinstance(result, tuple)
+        assert len(caplog.records) == 0

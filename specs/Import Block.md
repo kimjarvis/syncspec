@@ -146,7 +146,7 @@ If dictionary `Block.directive` does not contains a key "import" then return an 
 - Return the input parameter unchanged.
 #### Assume that
 
-- Line Splitting: `splitlines(keepends=True)` is used to define "lines". This preserves newline characters during slicing and reconstruction.
+- Line Splitting:  `splitlines(keepends=True)` is used to define "lines". This preserves newline characters during slicing and reconstruction.
 - Integer Validation: Boolean values are excluded from integer checks for head/tail (since bool is a subclass of int in Python).
 ## Package
 

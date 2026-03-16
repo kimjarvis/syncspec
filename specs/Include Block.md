@@ -14,16 +14,10 @@ class Node:
     name: str
 ```
 
-
-Import this class from file `src/syncspec/error.py`:
+Import logging.
+Import the function with this signature from file `src/syncspec/utilities.py`:
 ```python
-from dataclasses import dataclass
-
-@dataclass
-class Error:
-    message: str
-    name: str
-    line_number: int
+def format_error(message: str, name: str, line_number: int) -> str:
 ```
 
 Import this class from file `src/syncspec/string.py`:
@@ -74,7 +68,7 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_include_block(context: IncludeBlockContext):	
-	def include_block(block: Block) -> Union[Tuple[String, Node], Block, Error]:
+	def include_block(block: Block) -> Union[Tuple[String, Node], Block]:
 ```
 
 Check that the value of `block.directive["include"]` is a string.
@@ -103,7 +97,9 @@ Ensure that:
 - Strings top and bottom do not overlap.  Overlap is defined strictly as `head + tail > total_lines`. 
 - Negative head or tail values shall be rejected as invalid.
 
-If any these conditions are violated return an object of type Error, copy the block `line_number` and `name` fields into Error and add an informative message.
+When any of the validation conditions are violated:
+- Call `format_error` to format an error messages.  Pass an informative message,   `Block.name` and the line number on which the error was detected.  Use python logging to log the error.
+- Return the input parameter `block` unchanged.
 
 Return a tuple containing object of type String:
 - Copy `line_number` from Block.
@@ -126,18 +122,17 @@ The tuple shall also contain an object of type Node:
 - Set the directive type to "include"
 - Set the key to  the value of `block.directive["include"]`
 
-- If the key does not exist in the state dictionary or the value of `block.directive["include"]` is not a string then:
-	- Return an object of type Error instead. 
-	- Copy the `name` and `line_number` from Block.
-	- Add an informative error message.
+If the key does not exist in the state dictionary or the value of `block.directive["include"]` is not a string then:
+- Call `format_error` to format an error messages.  Pass an informative message,   `Block.name` and the line number on which the error was detected.  Use python logging to log the error.
+- Return the input parameter `block` unchanged.
 
 If dictionary `Block.directive` does not contains a key "include" then return an object of type Block:
 
-- Return the input parameter unchanged.
+- Return the input parameter `block` unchanged.
 
 #### Assume that
 
-- Line Splitting: splitlines(keepends=True) is used to define "lines". This preserves newline characters during slicing and reconstruction.
+- Line Splitting:  `splitlines(keepends=True)` is used to define "lines". This preserves newline characters during slicing and reconstruction.
 - Integer Validation: Boolean values are excluded from integer checks for head/tail (since bool is a subclass of int in Python).
 
 ## Package

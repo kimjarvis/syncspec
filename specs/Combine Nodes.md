@@ -3,6 +3,7 @@
 ## Functional specification
 
 Import this class from file `src/syncspec/node.py`:
+<!-- {="import": "src/syncspec/node.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -10,9 +11,10 @@ from dataclasses import dataclass
 class Node:
     directive_type: str
     key: str
-    line_number: int    
+    line_number: int
     name: str
 ```
+<!-- {==} -->
 
 Import this class from file `src/syncspec/edge.py`:
 ```python

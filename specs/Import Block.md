@@ -14,15 +14,10 @@ class Node:
     name: str
 ```
 
-Import this class from file `src/syncspec/error.py`:
+Import logging.
+Import the function with this signature from file `src/syncspec/utilities.py`:
 ```python
-from dataclasses import dataclass
-
-@dataclass
-class Error:
-    message: str
-    name: str
-    line_number: int
+def format_error(message: str, name: str, line_number: int) -> str:
 ```
 
 Import this class from file `src/syncspec/string.py`:
@@ -75,7 +70,7 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_import_block(context: ImportBlockContext):	
-	def import_block(block: Block) -> Union[Tuple[String, Node, Node], Block, Error]:
+	def import_block(block: Block) -> Union[Tuple[String, Node, Node], Block, None]:
 ```
 
 Check that the value of `block.directive["import"]` is a string.
@@ -89,7 +84,9 @@ The value of `block.directive["import"]` is a relative file or symbolic link pat
 - The file is a text file, not a binary file.  Treat it as utf-8. 
 - The file is readable.
 
-If any of these conditions are not met, return an object of type Error, copy the block line_number and name into Error and add an informative message.
+When any of the validation conditions are violated:
+- return None.
+- call `format_error` to format an error messages.  Pass an informative message,   `Block.name` and the line number on which the error was detected.  Use python logging to log the error.
 
 Read the content of the file into string variable `v`.
 
@@ -113,7 +110,9 @@ Ensure that:
 - Strings top and bottom do not overlap.  Overlap is defined strictly as `head + tail > total_lines`. 
 - Negative head or tail values shall be rejected as invalid.
 
-If any these conditions are violated return an object of type Error, copy the block `line_number` and `name` fields into Error and add an informative message.
+When any of the validation conditions are violated:
+- return None.
+- call `format_error` to format an error messages.  Pass an informative message,   `Block.name` and the line number on which the error was detected.  Use python logging to log the error.
 
 Return a tuple containing object of type String:
 - Copy `line_number` from Block.
@@ -125,10 +124,11 @@ Return a tuple containing object of type String:
 3. `ImportBlockContext.close_delimiter`
 4. `top`, the first h lines of `block.text`
 5. The value of v
-6. `bottom` the last t lines of `block.text`
-7. `ImportBlockContext.open_delimiter`
-8. `block.suffix`
-9. `ImportBlockContext.close_delimiter`
+6. A new line character `\n`
+7. `bottom` the last t lines of `block.text`
+8. `ImportBlockContext.open_delimiter`
+9. `block.suffix`
+10. `ImportBlockContext.close_delimiter`
 
 The tuple shall also contain an object of type Node:
 - The `line_number` shall be zero.
@@ -146,7 +146,7 @@ If dictionary `Block.directive` does not contains a key "import" then return an 
 - Return the input parameter unchanged.
 #### Assume that
 
-- Line Splitting: splitlines(keepends=True) is used to define "lines". This preserves newline characters during slicing and reconstruction.
+- Line Splitting: `splitlines(keepends=True)` is used to define "lines". This preserves newline characters during slicing and reconstruction.
 - Integer Validation: Boolean values are excluded from integer checks for head/tail (since bool is a subclass of int in Python).
 ## Package
 

@@ -1,1 +1,1 @@
-{"combine_nodes_context": "from dataclasses import dataclass, field\nfrom typing import Any, Dict\nimport networkx as nx\n\n@dataclass\nclass CombineNodesContext:\n\tG: nx.DiGraph\n"}
+{}

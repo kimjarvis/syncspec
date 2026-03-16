@@ -92,7 +92,8 @@ def make_validate_text(context: ValidateTextContext):
 
 ### Note that
 
-Requiring an even number of delimiter pairs is a specific requirement for this application.
+Requiring an even number of delimiter pairs is a specific requirement for this application
+
 ### Errors
 
 Raise a Value Error during factory creation for configuration errors.
@@ -100,6 +101,7 @@ Raise a Value Error during factory creation for configuration errors.
 When any of the validation conditions are violated:
 - return None.
 - call `format_error` to format an error messages.  Pass an informative message,   `Text.name` and the line number on which the error was detected.  Use python logging to log the error.
+
 ### Successful return
 
 Return a `ValidatedText` object.  Copy the `Text.text` field to `ValidatedText.text`.

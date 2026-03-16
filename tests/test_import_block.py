@@ -1,50 +1,94 @@
 import pytest
+import logging
 from pathlib import Path
 from src.syncspec.import_block import make_import_block
-from src.syncspec.block import Block
 from src.syncspec.import_block_context import ImportBlockContext
+from src.syncspec.block import Block
 from src.syncspec.string import String
 from src.syncspec.node import Node
-from src.syncspec.error import Error
 
 
 @pytest.fixture
-def context(tmp_path):
-    return ImportBlockContext(import_path=str(tmp_path), open_delimiter="<%", close_delimiter="%>")
+def valid_context(tmp_path):
+    return ImportBlockContext(import_path=str(tmp_path), open_delimiter="{{", close_delimiter="}}")
 
 
 @pytest.fixture
-def factory(context):
-    return make_import_block(context)
-
-
-@pytest.mark.parametrize("directive,expected_type", [
-    ({}, Block),
-    ({"import": 123}, Error),
-    ({"import": "../escape.txt"}, Error),
-    ({"import": "missing.txt"}, Error),
-    ({"import": "valid.txt", "head": -1}, Error),
-    ({"import": "valid.txt", "head": 10, "tail": 10}, Error),  # Overlap on small file
-])
-def test_import_block_conditions(factory, tmp_path, directive, expected_type):
-    # Setup file
-    (tmp_path / "valid.txt").write_text("line1\nline2\n", encoding='utf-8')
-
-    block = Block(directive=directive, prefix="", suffix="", text="a\nb\n", line_number=1, name="test")
-    result = factory(block)
-    assert isinstance(result, expected_type)
-
-
-def test_import_block_success(factory, tmp_path):
-    (tmp_path / "inc.txt").write_text("CONTENT", encoding='utf-8')
-    block = Block(
-        directive={"import": "inc.txt", "head": 1, "tail": 0},
-        prefix="P", suffix="S", text="H1\nH2\n", line_number=5, name="blk"
+def valid_block():
+    return Block(
+        directive={"import": "sub/file.txt"},
+        prefix="p",
+        suffix="s",
+        text="line1\nline2\nline3\n",
+        line_number=10,
+        name="test_block"
     )
-    result = factory(block)
+
+
+def test_no_import_key(valid_context, valid_block):
+    func = make_import_block(valid_context)
+    valid_block.directive = {}
+    assert func(valid_block) is valid_block
+
+
+def test_success_import(valid_context, valid_block, tmp_path):
+    (tmp_path / "sub").mkdir()
+    (tmp_path / "sub" / "file.txt").write_text("imported\n")
+    func = make_import_block(valid_context)
+    result = func(valid_block)
+
     assert isinstance(result, tuple)
-    s, n1, n2 = result
-    assert isinstance(s, String)
-    assert isinstance(n1, Node) and n1.directive_type == "export"
-    assert isinstance(n2, Node) and n2.directive_type == "import"
-    assert "CONTENT" in s.text
+    assert isinstance(result[0], String)
+    assert isinstance(result[1], Node)
+    assert isinstance(result[2], Node)
+    assert "imported" in result[0].text
+
+
+@pytest.mark.parametrize("directive, setup_file", [
+    ({"import": 123}, False),
+    ({"import": "../escape.txt"}, False),
+    ({"import": "missing.txt"}, False),
+    ({"import": "file.txt", "head": -1}, True),
+    ({"import": "file.txt", "head": 10, "tail": 10}, True),
+    ({"import": "file.txt", "head": True}, True),
+])
+def test_validation_failures(valid_context, valid_block, tmp_path, directive, setup_file):
+    if setup_file:
+        (tmp_path / "file.txt").write_text("content")
+    (tmp_path / "sub").mkdir(exist_ok=True)
+
+    valid_block.directive = directive
+    func = make_import_block(valid_context)
+    result = func(valid_block)
+
+    assert result is None
+
+
+def test_head_tail_extraction(valid_context, valid_block, tmp_path):
+    (tmp_path / "sub").mkdir()
+    (tmp_path / "sub" / "file.txt").write_text("imported_content\n")
+    valid_block.directive = {"import": "sub/file.txt", "head": 1, "tail": 1}
+    valid_block.text = "top\nmiddle\nbottom\n"
+
+    func = make_import_block(valid_context)
+    result = func(valid_block)
+
+    assert result is not None
+    assert "top\n" in result[0].text
+    assert "imported_content\n" in result[0].text
+    assert "bottom\n" in result[0].text
+
+
+def test_node_properties(valid_context, valid_block, tmp_path):
+    (tmp_path / "sub").mkdir()
+    (tmp_path / "sub" / "file.txt").write_text("content\n")
+    func = make_import_block(valid_context)
+    result = func(valid_block)
+
+    assert result[1].directive_type == "export"
+    assert result[1].key == "sub/file.txt"
+    assert result[1].line_number == 0
+    assert result[2].directive_type == "import"
+    assert result[2].key == "sub/file.txt"
+    assert result[2].line_number == 10
+    assert result[2].name == "test_block"

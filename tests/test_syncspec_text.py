@@ -67,12 +67,10 @@ def test_syncspec_text_functionality(name):
 
         expected_text = """line 1
     {{"source": "a"}}A{{}}
-    {{"source": "b"}}B
-{{}}
+    {{"source": "b"}}B{{}}
     line 2
     {{"include": "a"}}A{{}} 
-    {{"include": "b"}}B
-{{}}
+    {{"include": "b"}}B{{}}
     line 3"""
 
         assert context._csc.text == expected_text

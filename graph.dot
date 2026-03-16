@@ -1,0 +1,5 @@
+strict digraph {
+"export_src/syncspec/node.py_0" [key="src/syncspec/node.py", directive_type=export, label="export\nsrc/syncspec/node.py\n:0", shape=rectangle, style=filled, fillcolor=red];
+"import_Combine Nodes.md_6" [key="src/syncspec/node.py", directive_type=import, label="import\nCombine Nodes.md\n:6", shape=rectangle, style=filled, fillcolor=yellow];
+"export_src/syncspec/node.py_0" -> "import_Combine Nodes.md_6";
+}

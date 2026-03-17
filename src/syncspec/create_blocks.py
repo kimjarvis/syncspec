@@ -1,6 +1,6 @@
-import json
 import logging
-from typing import Union
+import json
+from typing import Union, Dict, Any
 
 from src.syncspec.utilities import format_error
 from src.syncspec.fragment import Fragment
@@ -8,7 +8,21 @@ from src.syncspec.block import Block
 from src.syncspec.string import String
 from src.syncspec.create_blocks_context import CreateBlocksContext
 
-logger = logging.getLogger(__name__)
+
+def _parse_json_content(text: str) -> Dict[str, Any]:
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        try:
+            data = json.loads('{' + text + '}')
+        except json.JSONDecodeError:
+            raise ValueError("Invalid JSON structure")
+
+    if not isinstance(data, dict):
+        raise ValueError("JSON root must be an object")
+    if any(k is None for k in data.keys()):
+        raise ValueError("Dictionary contains None keys")
+    return data
 
 
 def make_create_blocks(context: CreateBlocksContext):
@@ -16,56 +30,52 @@ def make_create_blocks(context: CreateBlocksContext):
         state = context.index % 4
         result: Union[Block, String, None] = None
 
-        try:
-            if state == 0:
-                result = String(text=fragment.text, line_number=fragment.line_number, name=fragment.name)
-            elif state == 1:
-                context.prefix = fragment.text
-                context.line_number = fragment.line_number
-            elif state == 2:
+        if state == 0:
+            result = String(text=fragment.text, line_number=fragment.line_number, name=fragment.name)
+
+        elif state == 1:
+            context.prefix = fragment.text
+            context.prefix_line_number = fragment.line_number
+            # Spec requests context.prefix_name = fragment.name, but field missing in class.
+
+            try:
+                context.directive = _parse_json_content(fragment.text)
+                context.prefix_valid = True
+                result = None
+            except (json.JSONDecodeError, ValueError):
+                context.prefix_valid = False
+                logging.error(format_error("JSON parsing failed", fragment.name, fragment.line_number))
+                result = String(
+                    text=context.open_delimiter + fragment.text + context.close_delimiter,
+                    line_number=fragment.line_number,
+                    name=fragment.name
+                )
+
+        elif state == 2:
+            if context.prefix_valid:
                 context.text = fragment.text
-            elif state == 3:
-                context.line_number = context.line_number  # Redundant but explicit per spec
-                prefix_dict = _parse_json(context.prefix, fragment.name, context.line_number)
-                suffix_dict = _parse_json(fragment.text, fragment.name, fragment.line_number)
+                result = None
+            else:
+                result = String(text=fragment.text, line_number=fragment.line_number, name=fragment.name)
 
-                if prefix_dict is None or suffix_dict is None:
-                    return None
-
-                # Check for None keys
-                if None in prefix_dict or None in suffix_dict:
-                    msg = format_error("Dictionary contains None keys", fragment.name, fragment.line_number)
-                    logger.error(msg)
-                    return None
-
-                directive = {**prefix_dict, **suffix_dict}
+        elif state == 3:
+            if context.prefix_valid:
                 result = Block(
-                    directive=directive,
+                    directive=context.directive,
                     prefix=context.prefix,
                     suffix=fragment.text,
                     text=context.text,
-                    line_number=context.line_number,
+                    line_number=context.prefix_line_number,
                     name=fragment.name
                 )
-        except Exception as e:
-            logger.error(format_error(str(e), fragment.name, fragment.line_number))
-            return None
-        finally:
-            context.index += 1
+            else:
+                result = String(
+                    text=context.open_delimiter + fragment.text + context.close_delimiter,
+                    line_number=fragment.line_number,
+                    name=fragment.name
+                )
 
+        context.index += 1
         return result
-
-    def _parse_json(text: str, name: str, line_number: int) -> Union[dict, None]:
-        if not text:
-            return {}
-        try:
-            return json.loads(text)
-        except json.JSONDecodeError:
-            try:
-                return json.loads(f"{{{text}}}")
-            except json.JSONDecodeError:
-                msg = format_error("Invalid JSON", name, line_number)
-                logger.error(msg)
-                return None
 
     return create_blocks

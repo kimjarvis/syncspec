@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-from typing import Any, Dict
 import networkx as nx
 
 from src.syncspec.text import Text
@@ -30,9 +28,9 @@ def make_syncspec_text(context: SyncspecTextContext):
     if not context.open_delimiter or not context.close_delimiter:
         raise ValueError("Delimiters cannot be empty")
     if not isinstance(context.graph, nx.DiGraph):
-        raise ValueError("Graph must be nx.DiGraph")
+        raise TypeError("Graph must be nx.DiGraph")
     if not isinstance(context.monad, dict):
-        raise ValueError("Monad must be dict")
+        raise TypeError("Monad must be dict")
 
     vtc = ValidateTextContext(
         open_delimiter=context.open_delimiter,
@@ -47,8 +45,12 @@ def make_syncspec_text(context: SyncspecTextContext):
     cbc = CreateBlocksContext(
         index=0,
         prefix="",
+        prefix_line_number=1,
+        prefix_valid=False,
+        directive={},
         text="",
-        line_number=1,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
     )
     sbc = SourceBlockContext(
         state=context.monad,
@@ -65,17 +67,9 @@ def make_syncspec_text(context: SyncspecTextContext):
         open_delimiter=context.open_delimiter,
         close_delimiter=context.close_delimiter,
     )
-    csc = CombineStringsContext(
-        text="",
-    )
-    cnc = CombineNodesContext(
-        G=context.graph,
-    )
-    gec = GraphEdgesContext(
-        G=context.graph,
-    )
-
-    context._combine_strings_context = csc
+    csc = CombineStringsContext(text="")
+    cnc = CombineNodesContext(G=context.graph)
+    gec = GraphEdgesContext(G=context.graph)
 
     validate_text = make_validate_text(vtc)
     fragment_text = make_fragment_text(ftc)
@@ -87,11 +81,15 @@ def make_syncspec_text(context: SyncspecTextContext):
     combine_nodes = make_combine_nodes(cnc)
     graph_edges = make_graph_edges(gec)
 
+    rules = build_rules([
+        validate_text, fragment_text, create_blocks, source_block,
+        import_block, include_block, combine_strings, combine_nodes, graph_edges
+    ])
+
+    context.csc = csc
+
     def syncspec_text(text: Text) -> File:
         facts = [text]
-        rules = build_rules(
-            [validate_text, fragment_text, create_blocks, source_block, import_block, include_block, combine_strings,
-             combine_nodes, graph_edges])
         production(facts, rules)
         return File(text=csc.text, name=text.name)
 

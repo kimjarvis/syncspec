@@ -54,8 +54,12 @@ from typing import Any, Dict
 class CreateBlocksContext:
 	index: int
 	prefix: str
+	prefix_line_number: int
+	prefix_valid: bool
+	directive: Dict[str, Any]  
 	text: str
-	line_number: int
+    open_delimiter: str
+    close_delimiter: str	
 ```
 
 Do not generate code to initialise the context.
@@ -76,39 +80,52 @@ def make_create_blocks(context: CreateBlocksContext):
 
 The field `index` acts as a global counter of the number of function calls.  Index is incremented after processing the current state to ensure the modulo check corresponds to the current call count (0-based).
 
-If index mod 4 equals zero then return an object of type String.
-- Copy the `Fragment.text` into `Sting.text`.
-- Copy  `Fragment.name` and store it in `String.name`
-- Copy the line number.
+If index mod 4 equals zero then return an object of type `String`.
+- Return a `Sting` object constructed using field values from `Fragment`.
 
-If index mod 4 equals 1 then return None.
+If index mod 4 equals 1 then:
 - Copy the fragment text into `CreateBlocksContext.prefix`
-- Copy the fragment line_number into the context.
+- Copy the fragment line_number into `CreateBlocksContext.prefix_line_number`
+- Copy the fragment name into `CreateBlocksContext.prefix_name`
+- Interpret `Fragment.text` as JSON.  Parse text as JSON object, wrapping in braces if necessary.  Supports raw fragments and complete objects.  Convert the resulting JSON object to a dictionary.  An empty string is valid.    
 
-If index mod 4 equals 2 then return None.
+If dictionary creation is successful:
+- Set `CreateBlocksContext.prefix_valid` to True.  
+- Store the dictionary in `CreateBlocksContext.directive`.
+- Return None.
+
+If an error occurs when converting the strings to JSON or when converting the JSON to a dictionary.
+- Call `format_error` to format an error messages.  Pass an informative message,   `Fragment.name` and the line number on which the error was detected.  Use python logging to log the error.
+- Return an object of type `String` constructed using field values from `Fragment`.
+	- Copy the line number and name
+	- `String.text = CreateBlocksContext.open_delimiter + Fragment.text + CreateBlocksContext.close_delimiter
+
+If index mod 4 equals 2 and `CreateBlocksContext.prefix_valid` is True then:
 - Copy the fragment text into `CreateBlocksContext.text`
+- Return None.
 
-If index mod 4 equals 3 then return an object of type Block or return None
+If index mod 4 equals 2 and `CreateBlocksContext.prefix_valid` is False then:
+- Return an object of type `String` constructed using field values from `Fragment`.
+
+If index mod 4 equals 3 and and `CreateBlocksContext.prefix_valid` is True then:
 - Copy  `CreateBlocksContext.prefix` and store it in `Block.prefix`
+- Copy `CreateBlocksContext.directive` and store it in `Block.directive`
 - Copy  `CreateBlocksContext.text` and store it in `Block.text`
 - Copy  `Fragment.text` and store it in `Block.suffix`
 - Copy  `Fragment.name` and store it in `Block.name`
-- Copy the context line_number into the Block.
-- Interpret `Block.prefix` a JSON.  Parse text as JSON object, wrapping in braces if necessary.  Supports raw fragments and complete objects.  Convert the resulting JSON object to a dictionary.  An empty string is valid, it will cause an empty dictionary to be created.
-- Interpret `Block.suffix` as a JSON.  Parse text as JSON object, wrapping in braces if necessary.  Supports raw fragments and complete objects.  Convert the resulting JSON object to a dictionary.  An empty string is valid, it will cause an empty dictionary to be created.
-- Combine the dictionaries and store in `Block.directive`.
-#### Conversion errors
+- Copy the `CreateBlocksContext.prefix_line_number` into the Block.
+- Return an object of type Block.
 
-If an error occurs when converting the strings to JSON or when converting the JSON to a dictionary.
-- return None.
-- call `format_error` to format an error messages.  Pass an informative message,   `Fragment.name` and the line number on which the error was detected.  Use python logging to log the error.
+If index mod 4 equals 3 and and `CreateBlocksContext.prefix_valid` is False then:
+- Return an object of type `String` constructed using field values from `Fragment`.
+	- Copy the line number and name
+	- `String.text = CreateBlocksContext.open_delimiter + Fragment.text + CreateBlocksContext.close_delimiter
 
 #### Assume that
 
 - Ensure that keys are valid strings.  Reject dictionaries containing None keys.
 - Mutable Context: `CreateBlocksContext` is mutable and shared across calls to the closure.
-- Brace Wrapping: If raw text fails parsing, {} are added around the text and parsing is retried.
-- Dictionary Merge: Later keys (suffix/fragment) overwrite earlier keys (prefix) in Block.directive.
+- Brace Wrapping: If raw text fails parsing, {} are added around the text and parsing is retried.  That is, try `json.loads`, and if that fails, attempt `json.loads('{' + text + '}')`.
 ## Package
 
 - `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.

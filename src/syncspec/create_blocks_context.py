@@ -5,5 +5,10 @@ from typing import Any, Dict
 class CreateBlocksContext:
 	index: int
 	prefix: str
+	prefix_line_number: int
+	prefix_valid: bool
+	directive: Dict[str, Any]
 	text: str
-	line_number: int
+	open_delimiter: str
+	close_delimiter: str
+

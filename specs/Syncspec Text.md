@@ -74,8 +74,12 @@ Modify this code to implement the function:
     cbc = CreateBlocksContext(
         index=0,
         prefix="",
+        prefix_line_number=1,
+        prefix_valid=False,
+        directive={},
         text="",
-        line_number=1,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
     )
     sbc = SourceBlockContext(
         state=context.monad,

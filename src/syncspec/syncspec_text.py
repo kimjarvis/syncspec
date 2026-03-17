@@ -1,11 +1,10 @@
-import os
+from dataclasses import dataclass
+from typing import Any, Dict
 import networkx as nx
-from typing import Callable, Any, Dict
 
-from src.syncspec.syncspec_text_context import SyncspecTextContext
 from src.syncspec.text import Text
 from src.syncspec.file import File
-
+from src.syncspec.syncspec_text_context import SyncspecTextContext
 from src.syncspec.validate_text import make_validate_text
 from src.syncspec.validate_text_context import ValidateTextContext
 from src.syncspec.fragment_text import make_fragment_text
@@ -20,8 +19,6 @@ from src.syncspec.include_block import make_include_block
 from src.syncspec.include_block_context import IncludeBlockContext
 from src.syncspec.combine_strings import make_combine_strings
 from src.syncspec.combine_strings_context import CombineStringsContext
-from src.syncspec.combine_errors import make_combine_errors
-from src.syncspec.combine_errors_context import CombineErrorsContext
 from src.syncspec.combine_nodes import make_combine_nodes
 from src.syncspec.combine_nodes_context import CombineNodesContext
 from src.syncspec.graph_edges import make_graph_edges
@@ -29,29 +26,56 @@ from src.syncspec.graph_edges_context import GraphEdgesContext
 from src.syncspec.production import build_rules, production
 
 
-def make_syncspec_text(context: SyncspecTextContext) -> Callable[[Text], File]:
+def make_syncspec_text(context: SyncspecTextContext):
     if not context.open_delimiter or not context.close_delimiter:
         raise ValueError("Delimiters cannot be empty")
-    if not isinstance(context.G, nx.DiGraph):
-        raise ValueError("G must be nx.DiGraph")
+    if not isinstance(context.graph, nx.DiGraph):
+        raise ValueError("Graph must be nx.DiGraph")
     if not isinstance(context.monad, dict):
-        raise ValueError("monad must be dict")
-    if not os.path.isdir(context.import_path):
-        raise ValueError("import_path must be valid directory")
+        raise ValueError("Monad must be dict")
 
-    vtc = ValidateTextContext(open_delimiter=context.open_delimiter, close_delimiter=context.close_delimiter, line_number=1)
-    ftc = FragmentTextContext(open_delimiter=context.open_delimiter, close_delimiter=context.close_delimiter, line_number=1)
-    cbc = CreateBlocksContext(index=0, prefix="", text="", line_number=1)
-    sbc = SourceBlockContext(state=context.monad, open_delimiter=context.open_delimiter, close_delimiter=context.close_delimiter)
-    imbc = ImportBlockContext(import_path=context.import_path, open_delimiter=context.open_delimiter, close_delimiter=context.close_delimiter)
-    ibc = IncludeBlockContext(state=context.monad, open_delimiter=context.open_delimiter, close_delimiter=context.close_delimiter)
-    csc = CombineStringsContext(text="")
-    cec = CombineErrorsContext(text=context.log)
-    cnc = CombineNodesContext(G=context.G)
-    gec = GraphEdgesContext(G=context.G)
+    vtc = ValidateTextContext(
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
+        line_number=1
+    )
+    ftc = FragmentTextContext(
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
+        line_number=1
+    )
+    cbc = CreateBlocksContext(
+        index=0,
+        prefix="",
+        text="",
+        line_number=1,
+    )
+    sbc = SourceBlockContext(
+        state=context.monad,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
+    )
+    imbc = ImportBlockContext(
+        import_path=context.import_path,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
+    )
+    ibc = IncludeBlockContext(
+        state=context.monad,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
+    )
+    csc = CombineStringsContext(
+        text="",
+    )
+    cnc = CombineNodesContext(
+        G=context.graph,
+    )
+    gec = GraphEdgesContext(
+        G=context.graph,
+    )
 
-    # Attach for testing access
-    context._csc = csc
+    context._combine_strings_context = csc
 
     validate_text = make_validate_text(vtc)
     fragment_text = make_fragment_text(ftc)
@@ -60,17 +84,15 @@ def make_syncspec_text(context: SyncspecTextContext) -> Callable[[Text], File]:
     import_block = make_import_block(imbc)
     include_block = make_include_block(ibc)
     combine_strings = make_combine_strings(csc)
-    combine_errors = make_combine_errors(cec)
     combine_nodes = make_combine_nodes(cnc)
     graph_edges = make_graph_edges(gec)
 
-    rules = build_rules([validate_text, fragment_text, create_blocks, source_block, import_block, include_block, combine_strings, combine_errors, combine_nodes, graph_edges])
-
     def syncspec_text(text: Text) -> File:
         facts = [text]
+        rules = build_rules(
+            [validate_text, fragment_text, create_blocks, source_block, import_block, include_block, combine_strings,
+             combine_nodes, graph_edges])
         production(facts, rules)
-
         return File(text=csc.text, name=text.name)
-
 
     return syncspec_text

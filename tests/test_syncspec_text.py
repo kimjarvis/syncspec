@@ -1,11 +1,7 @@
-import pytest
 import pprint
 import networkx as nx
-from pathlib import Path
-import tempfile
+import pytest
 
-from src.syncspec.combine_errors import make_combine_errors
-from src.syncspec.combine_errors_context import CombineErrorsContext
 from src.syncspec.graph_edges import make_graph_edges
 from src.syncspec.graph_edges_context import GraphEdgesContext
 from src.syncspec.combine_nodes import make_combine_nodes
@@ -26,51 +22,46 @@ from src.syncspec.validate_text import make_validate_text
 from src.syncspec.validate_text_context import ValidateTextContext
 from src.syncspec.import_block import make_import_block
 from src.syncspec.import_block_context import ImportBlockContext
-from src.syncspec.file import File
 from src.syncspec.syncspec_text_context import SyncspecTextContext
 from src.syncspec.syncspec_text import make_syncspec_text
+from src.syncspec.file import File
 
 
-@pytest.mark.parametrize("name", ["freddy"])
-def test_syncspec_text_functionality(name):
-    with tempfile.TemporaryDirectory() as tmpdir:
-        open_delimiter = "{{"
-        close_delimiter = "}}"
-        log = "log.txt"
-        G = nx.DiGraph()
-        monad = {}
-        import_path = tmpdir
-
-        context = SyncspecTextContext(
-            open_delimiter=open_delimiter,
-            close_delimiter=close_delimiter,
-            log=log,
-            G=G,
-            monad=monad,
-            import_path=import_path
-        )
-
-        syncspec_text = make_syncspec_text(context)
-
-        input_text = Text(name=name, text="""line 1
+@pytest.mark.parametrize("input_text,expected_text", [
+    ("""line 1
     {{"source": "a"}}A{{}}
     {{"source": "b"}}B{{}}
     line 2
     {{"include": "a"}}{{}} 
     {{"include": "b"}}{{}}
-    line 3""")
-
-        result = syncspec_text(input_text)
-
-        assert isinstance(result, File)
-        assert result.name == name
-
-        expected_text = """line 1
+    line 3""",
+     """line 1
     {{"source": "a"}}A{{}}
     {{"source": "b"}}B{{}}
     line 2
     {{"include": "a"}}A{{}} 
     {{"include": "b"}}B{{}}
-    line 3"""
+    line 3""")
+])
+def test_syncspec_text(input_text, expected_text):
+    open_delimiter = "{{"
+    close_delimiter = "}}"
+    graph = nx.DiGraph()
+    monad = {}
+    import_path = "."
 
-        assert context._csc.text == expected_text
+    context = SyncspecTextContext(
+        open_delimiter=open_delimiter,
+        close_delimiter=close_delimiter,
+        graph=graph,
+        monad=monad,
+        import_path=import_path
+    )
+
+    syncspec_text = make_syncspec_text(context)
+    input_obj = Text(name="freddy", text=input_text)
+    result = syncspec_text(input_obj)
+
+    assert isinstance(result, File)
+    assert result.name == "freddy"
+    assert context._combine_strings_context.text == expected_text

@@ -32,8 +32,7 @@ import networkx as nx
 class SyncspecTextContext:
     open_delimiter: str
     close_delimiter: str
-    log: str
-    G: nx.DiGraph
+    graph: nx.DiGraph
     monad: Dict[str, Any]
     import_path: str
 ```
@@ -41,10 +40,9 @@ class SyncspecTextContext:
 Do not generate code to initialise the context.
 
 Verify context in function `make_syncspec_text`:
-- open_delimiter and close_delimiter are not empty strings.
-- G is a valid nx.DiGraph object.
-- monad is a valid dictionary.
-- import_path is a valid directory path.  The directory must exist.
+- `open_delimiter` and `close_delimiter` are not empty strings.
+- `graph` is a valid `nx.DiGraph` object.
+- `monad` is a valid dictionary.
 ### Implement the unary function Syncspec Text
 
 In the file `src/syncspec/syncspec_text.py`.
@@ -56,14 +54,18 @@ def make_syncspec_text(context: SyncspecTextContext):
 	def syncspec_text(text: Text) -> File
 ```
 
-Modify this code to implement the function:
-
-```python
-    vtc = ValidateTextContext(
+Set `validate_text` to the value of `make_validate_text` passing this an object of this type as the argument:
+```
+ValidateTextContext(
         open_delimiter=context.open_delimiter,
         close_delimiter=context.close_delimiter,
         line_number=1
-    )
+)
+```
+
+Modify this code to implement the function:
+
+```python
     ftc = FragmentTextContext(
         open_delimiter=context.open_delimiter,
         close_delimiter=context.close_delimiter,
@@ -93,24 +95,19 @@ Modify this code to implement the function:
     csc = CombineStringsContext(
         text="",
     )
-    cec = CombineErrorsContext(
-        text=context.log,
-    )
     cnc = CombineNodesContext(
-        G=context.G,
+        G=context.graph,
     )
     gec = GraphEdgesContext(
-        G=context.G,
+        G=context.graph,
     )
 
-    validate_text = make_validate_text(vtc)
     fragment_text = make_fragment_text(ftc)
     create_blocks = make_create_blocks(cbc)
     source_block = make_source_block(sbc)
     import_block = make_import_block(imbc)
     include_block = make_include_block(ibc)
     combine_strings = make_combine_strings(csc)
-    combine_errors = make_combine_errors(cec)
     combine_nodes = make_combine_nodes(cnc)
     graph_edges = make_graph_edges(gec)
 
@@ -122,9 +119,12 @@ Modify this code to implement the function:
     {{"include": "b"}}{{}}
     line 3"""),
     ]
+```
 
+Achieve this by appending each function, such as validate_text, to the list after creation, running build_rules and then passing the rules to `production`.
+```
     rules = build_rules(
-        [validate_text, fragment_text, create_blocks, source_block, import_block, include_block, combine_strings, combine_errors,
+        [validate_text, fragment_text, create_blocks, source_block, import_block, include_block, combine_strings, 
          combine_nodes, graph_edges])
 
 	production(facts, rules)
@@ -132,7 +132,6 @@ Modify this code to implement the function:
 
 - The contexts shall be initialised with values from `SyncspecTextContext`.  
 - Context objects (csc, sbc, ibc, etc.) are instantiated once in the factory.  Subsequent calls to `syncspec_text` will carry over state.
-- Use `SyncspecTextContext.log` to set `CombineErrorsContext.text`.
 - Do not modify magic numbers, such as `index=0`.
 - The parameter text shall replace the creation Text object, used to set facts.
 - Return an object of type `File`, use the final value of `CombineStringsContext.text` and the parameter value `text.name`.
@@ -155,8 +154,7 @@ Initialise the context suggestion:
 ```python
     open_delimiter = "{{"
     close_delimiter = "}}"
-    log = "log.txt"
-    G = nx.DiGraph()
+    graph = nx.DiGraph()
 	monad = {}
 	import_path="."
 ```
@@ -185,8 +183,6 @@ import pprint
 
 import networkx as nx
 
-from src.syncspec.combine_errors import make_combine_errors
-from src.syncspec.combine_errors_context import CombineErrorsContext
 from src.syncspec.graph_edges import make_graph_edges
 from src.syncspec.graph_edges_context import GraphEdgesContext
 from src.syncspec.combine_nodes import make_combine_nodes

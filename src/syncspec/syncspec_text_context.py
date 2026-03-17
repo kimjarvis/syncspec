@@ -6,7 +6,6 @@ import networkx as nx
 class SyncspecTextContext:
     open_delimiter: str
     close_delimiter: str
-    log: str
-    G: nx.DiGraph
+    graph: nx.DiGraph
     monad: Dict[str, Any]
     import_path: str

@@ -32,8 +32,7 @@ import networkx as nx
 class SyncspecTextContext:
     open_delimiter: str
     close_delimiter: str
-    log: str
-	G: nx.DiGraph
+	graph: nx.DiGraph
 	monad: Dict[str, Any]
 	import_path: str
 ```
@@ -57,8 +56,7 @@ from typing import Any, Dict
 class SyncspecListContext:
     open_delimiter: str
     close_delimiter: str
-    log_file: str
-    graph_file: str
+    monad: Dict[str, Any]
 	import_path: str
 ```
 
@@ -73,17 +71,15 @@ Define a closure factory with a unary function with signature:
 from typing import List, Tuple
 
 def make_syncspec_list(context: SyncspecListContext):
-	def syncspec_list(text: List[Text]) -> Tuple[List[File], str, nx.DiGraph, dict] 
+	def syncspec_list(text: List[Text]) -> Tuple[List[File], nx.DiGraph, dict] 
 ```
 
 In `make_syncspec_list`:
 
 - Construct a `SyncspecTextContext` object.
 	- Copy the open and closing delimiter from `SyncspecListContext` to  `SyncspecTextContext`.
-	- The context parameters are used to set the delimiters.
-	- Initialise `SyncspecTextContext.log` to an empty string.
-	- Initialise `SyncspecTextContext.G` to an empty DiGraph.
-	- Initialise `SyncspecTextContext.monad` to an empty dictionary.
+	- Initialise `SyncspecTextContext.graph` to an empty DiGraph.
+	- Copy monad from `SyncspecListContext` to  `SyncspecTextContext`.
 
 In `syncspec_list`:
 
@@ -94,7 +90,6 @@ In `syncspec_list`:
 
 Return a tuple containing:
 - The list of file objects
-- String `SyncspecTextContext.log`
 - An object of type nx.DiGraph  `SyncspecTextContext.G`
 - Dictionary `SyncspecTextContext.monad`
 ## Assume

@@ -5,6 +5,5 @@ from typing import Any, Dict
 class SyncspecListContext:
     open_delimiter: str
     close_delimiter: str
-    log_file: str
-    graph_file: str
+    monad: Dict[str, Any]
     import_path: str

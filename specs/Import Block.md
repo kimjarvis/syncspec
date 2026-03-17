@@ -60,8 +60,6 @@ class ImportBlockContext:
 
 Do not generate code to initialise the context.
 
- Verify at context at initialization time:
-- import_path is a valid directory path.
 ### Implement the unary function Import Block
 
 In the file `src/syncspec/import_block.py`.
@@ -70,23 +68,20 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_import_block(context: ImportBlockContext):	
-	def import_block(block: Block) -> Union[Tuple[String, Node, Node], Block, None]:
+	def import_block(block: Block) -> Union[Tuple[String, Node, Node], Block, String]:
 ```
-
-Check that the value of `block.directive["import"]` is a string.
 
 If dictionary `Block.directive` contains a key "import" then:
 
-The value of `block.directive["import"]` is a relative file or symbolic link path.  The path is relative to the directory path `ImportBlockContext.import_path`.  Verify that:  
+The value of `block.directive["import"]` is a relative file or symbolic link path.  The path is relative to the directory path `ImportBlockContext.import_path`.  
+
+Ensure that:  
 - The file must be in directory `ImportBlockContext.import_path` or one of its sub-directories.  Accessing a parent directory is not allowed.
 - If the file is a symbolic link then the link target must also be in the directory `ImportBlockContext.import_path` or one of its sub-directories.  
 - The file exists.  
 - The file is a text file, not a binary file.  Treat it as utf-8. 
 - The file is readable.
-
-When any of the validation conditions are violated:
-- return None.
-- call `format_error` to format an error messages.  Pass an informative message,   `Block.name` and the line number on which the error was detected.  Use python logging to log the error.
+When any of the validation conditions are violated Log and error and return a String.
 
 Read the content of the file into string variable `v`.
 
@@ -102,17 +97,13 @@ Let bottom be the last tail lines of `u`.
 
 Assume that:
 
-- Directive values `Block.directive["head"]=0`  and `Block.directive["head"]=0` are valid no-ops even when `u` is an empty string.
+- Directive values `Block.directive["head"]=0`  and `Block.directive["tail"]=0` are valid no-ops even when `u` is an empty string.
  
 Ensure that:
-
 - `v` is a string.
 - Strings top and bottom do not overlap.  Overlap is defined strictly as `head + tail > total_lines`. 
 - Negative head or tail values shall be rejected as invalid.
-
-When any of the validation conditions are violated:
-- return None.
-- call `format_error` to format an error messages.  Pass an informative message,   `Block.name` and the line number on which the error was detected.  Use python logging to log the error.
+When any of the validation conditions are violated Log and error and return a String.
 
 Return a tuple containing object of type String:
 - Copy `line_number` from Block.
@@ -144,13 +135,24 @@ The tuple shall also contain another object of type Node:
 
 If dictionary `Block.directive` does not contains a key "import" then return an object of type Block:
 - Return the input parameter unchanged.
+
+#### Log and error and return a String
+
+When conditions are violated:
+- Call `format_error` to format an error messages.  Pass an informative message,   `Block.name` and the line number on which the error was detected.  Use python logging to log the error.
+- Return an object of type `String`.
+	- Copy name and line number from block.
+	- `String.text = ImportBlockContext.open_delimiter + Block.prefix + ImportBlockContext.close_delimiter + Block.text + ImportBlockContext.open_delimiter + Block.suffix + ImportBlockContext.close_delimiter
+
 #### Assume that
 
 - Line Splitting:  `splitlines(keepends=True)` is used to define "lines". This preserves newline characters during slicing and reconstruction.
 - Integer Validation: Boolean values are excluded from integer checks for head/tail (since bool is a subclass of int in Python).
 ## Package
 
-`src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
+- `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
+- Assume Python version 3.10.
+
 ## Test the unary function  
 
 In the file `tests/test_import_block.py`.

@@ -2,18 +2,6 @@
 
 ## Functional specification
 
-
-Import this class from file `src/syncspec/error.py`:
-```python
-from dataclasses import dataclass
-
-@dataclass
-class Error:
-    message: str
-    name: str
-    line_number: int
-```
-
 Import this class from file `src/syncspec/node.py`:
 ```python
 from dataclasses import dataclass
@@ -24,6 +12,12 @@ class Node:
     key: str
     line_number: int    
     name: str
+```
+
+Import logging.
+Import the function with this signature from file `src/syncspec/utilities.py`:
+```python
+def format_error(message: str, name: str, line_number: int) -> str:
 ```
 
 Import this class from file `src/syncspec/string.py`:
@@ -65,6 +59,7 @@ class SourceBlockContext:
 ```
 
 Do not generate code to initialise the context.
+
 ### Implement the unary function Source Block
 
 In the file `src/syncspec/source_block.py`.
@@ -73,10 +68,8 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_source_block(context: SourceBlockContext):	
-	def source_block(block: Block) -> Union[Tuple[String, Node], Block, Error]:
+	def source_block(block: Block) -> Union[Tuple[String, Node], Block, String]:
 ```
-
-Check that the value of `block.directive["source"]` is a string.
 
 If dictionary `Block.directive` contains a key "source" then:
 
@@ -95,13 +88,18 @@ Return a tuple containing object of type String:
 
 Copy to `Block.text` to `text`.
 
-If dictionary `Block.directive` contains a key "head" with an integer value h with then:
-- Remove the first h lines from `text`.
-- If it is not possible to remove h lines from `text` then return an object of type Error, copy the block line_number and name into Error and add an informative message.
-And then, if dictionary `Block.directive` contains a key "tail" with an integer value t with then:
-- Remove the last t lines from `text`. If it is not possible to remove t lines from `text` then return an object of type Error, copy the block line_number and name into Error and add an informative message.
+- If dictionary `Block.directive` contains a key "head", call the value `Block.directive["head"]` h, otherwise let h=0.
+- If dictionary `Block.directive` contains a key "tail", call the value `Block.directive["head"]` t, otherwise let t=0.
 
-First apply head then apply tail to the result. Negative head or tail values shall be rejected as invalid, head=0 or tail=0 are valid no-ops.
+Ensure that:
+
+- h is a positive integer or zero.
+- t is a positive integer or zero,
+- t+h lines can be removed from `text`.
+When any of the validation conditions are violated Log and error and return a String.
+
+- If `h>0`, remove the first h lines from `text`.
+- If `t>0`, remove the last t lines from `text`. 
 
 And add a key value pair to the `SourceBlockContext.state` dictionary:
 - key is the value of `block.directive["source"]`
@@ -115,6 +113,14 @@ The tuple shall also contain an object of type Node:
 
 If dictionary `Block.directive` does not contains a key "source" then return an object of type Block:
 - Return the input parameter `block` unchanged.
+
+#### Log and error and return a String
+
+When conditions are violated:
+- Call `format_error` to format an error messages.  Pass an informative message,   `Block.name` and the line number on which the error was detected.  Use python logging to log the error.
+- Return an object of type `String`.
+	- Copy name and line number from block.
+	- `String.text = SourceBlockContext.open_delimiter + Block.prefix + SourceBlockContext.close_delimiter + Block.text + SourceBlockContext.open_delimiter + Block.suffix + SourceBlockContext.close_delimiter
 
 ## Package
 

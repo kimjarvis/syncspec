@@ -1,1 +1,1 @@
-{"a": "A", "b": "B", "lines.txt": " -->A<!-- "}
+{"lines.txt": "0\n1\n2\n3\n4", "include1.txt": " -->\nF\nG\nH\n<!-- "}

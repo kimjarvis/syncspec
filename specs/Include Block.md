@@ -68,12 +68,17 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_include_block(context: IncludeBlockContext):	
-	def include_block(block: Block) -> Union[Tuple[String, Node], Block]:
+	def include_block(block: Block) -> Union[Tuple[String, Node], Block, String]:
 ```
 
 Check that the value of `block.directive["include"]` is a string.
 
 If dictionary `Block.directive` contains a key "include" then:
+
+Ensure that:
+- The value of `block.directive["include"]` is a string.  Call it key.
+- The key exists in the dictionary `IncludeBlockContext.state`.
+When any of the validation conditions are violated Log and error and return a String.
 
 Fetch the string `v` from `IncludeBlockContext.state[key]` where key is the value of `block.directive["include"]`.
 
@@ -89,17 +94,13 @@ Let bottom be the last tail lines of `u`.
 
 Assume that:
 
-- Directive values `Block.directive["head"]=0`  and `Block.directive["head"]=0` are valid no-ops even when `u` is an empty string.
+- Directive values `Block.directive["head"]=0`  and `Block.directive["tail"]=0` are valid no-ops even when `u` is an empty string.
  
 Ensure that:
-
 - `v` is a string.
 - Strings top and bottom do not overlap.  Overlap is defined strictly as `head + tail > total_lines`. 
 - Negative head or tail values shall be rejected as invalid.
-
-When any of the validation conditions are violated:
-- Call `format_error` to format an error messages.  Pass an informative message,   `Block.name` and the line number on which the error was detected.  Use python logging to log the error.
-- Return the input parameter `block` unchanged.
+When any of the validation conditions are violated Log and error and return a String.
 
 Return a tuple containing object of type String:
 - Copy `line_number` from Block.
@@ -122,13 +123,17 @@ The tuple shall also contain an object of type Node:
 - Set the directive type to "include"
 - Set the key to  the value of `block.directive["include"]`
 
-If the key does not exist in the state dictionary or the value of `block.directive["include"]` is not a string then:
-- Call `format_error` to format an error messages.  Pass an informative message,   `Block.name` and the line number on which the error was detected.  Use python logging to log the error.
-- Return the input parameter `block` unchanged.
-
 If dictionary `Block.directive` does not contains a key "include" then return an object of type Block:
 
 - Return the input parameter `block` unchanged.
+
+#### Log and error and return a String
+
+When conditions are violated:
+- Call `format_error` to format an error messages.  Pass an informative message,   `Block.name` and the line number on which the error was detected.  Use python logging to log the error.
+- Return an object of type `String`.
+	- Copy name and line number from block.
+	- `String.text = IncludeBlockContext.open_delimiter + Block.prefix + IncludeBlockContext.close_delimiter + Block.text + IncludeBlockContext.open_delimiter + Block.suffix + IncludeBlockContext.close_delimiter
 
 #### Assume that
 

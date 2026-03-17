@@ -1,3 +1,3 @@
 strict digraph {
-"source_invalid_json.md_1" [key="lines.txt", directive_type=source, label="source\ninvalid_json.md\n:1", shape=rectangle, style=filled, fillcolor=lightblue];
+"source_invalid_include.md_1" [key="include1.txt", directive_type=source, label="source\ninvalid_include.md\n:1", shape=rectangle, style=filled, fillcolor=lightblue];
 }

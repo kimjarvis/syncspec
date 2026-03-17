@@ -3,94 +3,93 @@ from pathlib import Path
 from typing import Union, Tuple, Dict, Any
 
 from src.syncspec.node import Node
+from src.syncspec.utilities import format_error
 from src.syncspec.string import String
 from src.syncspec.block import Block
 from src.syncspec.import_block_context import ImportBlockContext
-from src.syncspec.utilities import format_error
 
 
 def make_import_block(context: ImportBlockContext):
-    base_path = Path(context.import_path).resolve()
-
-    def import_block(block: Block) -> Union[Tuple[String, Node, Node], Block, None]:
-        directive = block.directive
-        if "import" not in directive:
+    def import_block(block: Block) -> Union[Tuple[String, Node, Node], Block, String]:
+        if "import" not in block.directive:
             return block
 
-        import_path = directive["import"]
-        if not isinstance(import_path, str):
-            logging.error(format_error("'import' must be a string", block.name, block.line_number))
-            return None
+        import_path = block.directive["import"]
+        log_err = lambda msg: _log_and_return_error(msg, block, context)
 
-        # Resolve and validate path
+        # Path Validation
         try:
-            target_path = (base_path / import_path).resolve()
-            target_path.relative_to(base_path)
-        except (ValueError, RuntimeError):
-            logging.error(format_error("Invalid import path (escape attempt)", block.name, block.line_number))
-            return None
+            root = Path(context.import_path).resolve()
+            target = (root / import_path).resolve()
 
-        if not target_path.exists() or not target_path.is_file():
-            logging.error(format_error("Import file does not exist", block.name, block.line_number))
-            return None
+            if not str(target).startswith(str(root) + '/') and str(target) != str(root):
+                return log_err("Path traversal detected")
+            if not target.exists():
+                return log_err("File does not exist")
+            if not target.is_file():
+                return log_err("Not a file")
 
-        # Validate text/utf-8
-        try:
-            v = target_path.read_text(encoding='utf-8')
-        except (UnicodeDecodeError, PermissionError):
-            logging.error(format_error("Import file is not readable text", block.name, block.line_number))
-            return None
+            # Read and Decode
+            try:
+                v = target.read_text(encoding='utf-8')
+            except UnicodeDecodeError:
+                return log_err("File is not valid UTF-8 text")
+            except PermissionError:
+                return log_err("File is not readable")
+        except Exception as e:
+            return log_err(f"Validation failed: {str(e)}")
 
-        # Validate head/tail
-        head = directive.get("head", 0)
-        tail = directive.get("tail", 0)
+        # Head/Tail Validation
+        head = block.directive.get("head", 0)
+        tail = block.directive.get("tail", 0)
 
         if not isinstance(head, int) or isinstance(head, bool) or head < 0:
-            logging.error(format_error("Invalid 'head' value", block.name, block.line_number))
-            return None
+            return log_err("Invalid head value")
         if not isinstance(tail, int) or isinstance(tail, bool) or tail < 0:
-            logging.error(format_error("Invalid 'tail' value", block.name, block.line_number))
-            return None
+            return log_err("Invalid tail value")
 
-        lines = block.text.splitlines(keepends=True)
-        total_lines = len(lines)
+        u_lines = block.text.splitlines(keepends=True)
+        total_lines = len(u_lines)
 
         if head + tail > total_lines:
-            logging.error(format_error("Head and tail overlap", block.name, block.line_number))
-            return None
+            return log_err("Head and tail overlap")
 
-        top = "".join(lines[:head])
-        bottom = "".join(lines[total_lines - tail:]) if tail > 0 else ""
+        top = "".join(u_lines[:head])
+        bottom = "".join(u_lines[-tail:] if tail > 0 else [])
 
-        # Construct String
+        # Construct Result String
         s_text = (
-            context.open_delimiter +
-            block.prefix +
-            context.close_delimiter +
-            top +
-            v +
-            "\n" +
-            bottom +
-            context.open_delimiter +
-            block.suffix +
-            context.close_delimiter
+                context.open_delimiter +
+                block.prefix +
+                context.close_delimiter +
+                top +
+                v +
+                "\n" +
+                bottom +
+                context.open_delimiter +
+                block.suffix +
+                context.close_delimiter
         )
         res_string = String(text=s_text, line_number=block.line_number, name=block.name)
 
         # Construct Nodes
-        export_node = Node(
-            directive_type="export",
-            key=import_path,
-            line_number=0,
-            name=import_path
-        )
-        import_node = Node(
-            directive_type="import",
-            key=import_path,
-            line_number=block.line_number,
-            name=block.name
-        )
+        n_export = Node(directive_type="export", key=import_path, line_number=0, name=import_path)
+        n_import = Node(directive_type="import", key=import_path, line_number=block.line_number, name=block.name)
 
-        return (res_string, export_node, import_node)
+        return (res_string, n_export, n_import)
 
     return import_block
+
+
+def _log_and_return_error(message: str, block: Block, context: ImportBlockContext) -> String:
+    logging.error(format_error(message, block.name, block.line_number))
+    text = (
+            context.open_delimiter +
+            block.prefix +
+            context.close_delimiter +
+            block.text +
+            context.open_delimiter +
+            block.suffix +
+            context.close_delimiter
+    )
+    return String(text=text, line_number=block.line_number, name=block.name)

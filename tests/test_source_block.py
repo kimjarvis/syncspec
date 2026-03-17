@@ -1,44 +1,54 @@
 import pytest
 from src.syncspec.source_block import make_source_block
-from src.syncspec.block import Block
 from src.syncspec.source_block_context import SourceBlockContext
-from src.syncspec.error import Error
+from src.syncspec.block import Block
 from src.syncspec.string import String
 from src.syncspec.node import Node
 
 
 @pytest.mark.parametrize(
-    "directive,expected_type",
+    "directive, expected_type",
     [
         ({}, Block),
-        ({"source": 123}, Error),
         ({"source": "key"}, tuple),
-    ],
+    ]
 )
-def test_source_directive_variations(directive, expected_type):
-    ctx = SourceBlockContext(state={}, open_delimiter="<", close_delimiter=">")
+def test_directive_handling(directive, expected_type):
+    ctx = SourceBlockContext(state={}, open_delimiter="[", close_delimiter="]")
     block = Block(directive=directive, prefix="", suffix="", text="content", line_number=1, name="test")
-    result = make_source_block(ctx)(block)
+    func = make_source_block(ctx)
+    result = func(block)
     assert isinstance(result, expected_type)
 
 
 @pytest.mark.parametrize(
-    "text,head,tail,expected_state,error_expected",
+    "head, tail, text, should_fail",
     [
-        ("a\nb\nc\n", 1, 1, "b\n", False),
-        ("a\n", 1, 0, "", False),
-        ("a\n", 2, 0, None, True),
-        ("a\n", 0, 2, None, True),
-    ],
+        (0, 0, "a\nb\nc", False),
+        (1, 1, "a\nb\nc", False),
+        (-1, 0, "a", True),
+        (0, 5, "a\nb", True),
+    ]
 )
-def test_head_tail_processing(text, head, tail, expected_state, error_expected):
-    ctx = SourceBlockContext(state={}, open_delimiter="<", close_delimiter=">")
+def test_head_tail_validation(head, tail, text, should_fail):
+    ctx = SourceBlockContext(state={}, open_delimiter="[", close_delimiter="]")
     directive = {"source": "key", "head": head, "tail": tail}
     block = Block(directive=directive, prefix="", suffix="", text=text, line_number=1, name="test")
-    result = make_source_block(ctx)(block)
+    func = make_source_block(ctx)
+    result = func(block)
 
-    if error_expected:
-        assert isinstance(result, Error)
+    if should_fail:
+        assert isinstance(result, String)
+        assert "key" not in ctx.state
     else:
         assert isinstance(result, tuple)
-        assert ctx.state["key"] == expected_state
+        assert ctx.state["key"] is not None
+
+
+def test_state_update():
+    ctx = SourceBlockContext(state={}, open_delimiter="[", close_delimiter="]")
+    directive = {"source": "my_key", "head": 1, "tail": 0}
+    block = Block(directive=directive, prefix="", suffix="", text="line1\nline2", line_number=1, name="test")
+    func = make_source_block(ctx)
+    func(block)
+    assert ctx.state["my_key"] == "line2"

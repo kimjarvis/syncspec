@@ -2,7 +2,7 @@
 
 ## Functional specification
 
-Import this class from file `src/syncspec/text.py`:
+<!-- {="import": "src/syncspec/text.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -11,8 +11,9 @@ class Text:
     text: str
     name: str
 ```
+<!-- {==} -->
 
-Import this class from file `src/syncspec/file.py`:
+<!-- {="import": "src/syncspec/file.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -21,8 +22,9 @@ class File:
     text: str
     name: str
 ```
+<!-- {==} -->
 
-Import this class from file `src/syncspec/syncspec_text_context.py`:
+<!-- {="import": "src/syncspec/syncspec_text_context.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass, field
 from typing import Any, Dict
@@ -32,10 +34,11 @@ import networkx as nx
 class SyncspecTextContext:
     open_delimiter: str
     close_delimiter: str
-	graph: nx.DiGraph
-	monad: Dict[str, Any]
-	import_path: str
+    graph: nx.DiGraph
+    monad: Dict[str, Any]
+    import_path: str
 ```
+<!-- {==} -->
 
 Import this function from file  `src/syncspec/syncspec_text.py`:
 ```python
@@ -47,7 +50,7 @@ The function `make_syncspec_text` is already implemented, it contains:
 - Logic to write to the log file and graph file.
 - Transformation logic, using the delimiters.
 
-Import this class from file `src/syncspec/syncspec_list_context.py`:
+<!-- {="import": "src/syncspec/syncspec_list_context.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass, field
 from typing import Any, Dict
@@ -57,8 +60,9 @@ class SyncspecListContext:
     open_delimiter: str
     close_delimiter: str
     monad: Dict[str, Any]
-	import_path: str
+    import_path: str
 ```
+<!-- {==} -->
 
 Do not generate code to initialise `SyncspecListContext`.
 ### Implement the unary function
@@ -96,14 +100,22 @@ Return a tuple containing:
 
 - The process has permission to check existence of `log_file` and `graph_file` and read `import_path`.
 - `networkx` is installed and available.
+
+<!-- {= "include": "package", "head": 1, "tail": 1 =} -->
 ## Package
 
-`src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
+- The function is part of the python package `src/syncspec` .   
+- Imports take the form `from src.syncspec.x import X`.
+- Assume Python version 3.10.
 
+<!-- {==} -->
+
+<!-- {= "include": "explain_the_solution", "head": 1, "tail": 1 =} -->
 ## Explain the solution  
 
 - Describe any logical inconsistencies in the function specification and suggest improvements. 
 - Describe any assumptions that are not explicitly stated in this function specification.
 
+<!-- {==} -->
 
 

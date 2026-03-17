@@ -2,7 +2,7 @@
 
 ## Functional specification
 
-Import this class from file `src/syncspec/text.py`:
+<!-- {="import": "src/syncspec/text.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -11,8 +11,9 @@ class Text:
     text: str
     name: str
 ```
+<!-- {==} -->
 
-Import this class from file `src/syncspec/file.py`:
+<!-- {="import": "src/syncspec/file.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -21,8 +22,9 @@ class File:
     text: str
     name: str
 ```
+<!-- {==} -->
 
-Import this class from file `src/syncspec/syncspec_text_context.py`:
+<!-- {="import": "src/syncspec/syncspec_text_context.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass, field
 from typing import Any, Dict
@@ -36,6 +38,7 @@ class SyncspecTextContext:
     monad: Dict[str, Any]
     import_path: str
 ```
+<!-- {==} -->
 
 Do not generate code to initialise the context.
 
@@ -43,7 +46,7 @@ Verify context in function `make_syncspec_text`:
 - `open_delimiter` and `close_delimiter` are not empty strings.
 - `graph` is a valid `nx.DiGraph` object.
 - `monad` is a valid dictionary.
-### Implement the unary function Syncspec Text
+### ### Implement a unary function
 
 In the file `src/syncspec/syncspec_text.py`.
 
@@ -209,7 +212,10 @@ from src.syncspec.import_block import make_import_block
 from src.syncspec.import_block_context import ImportBlockContext
 ```
 
+<!-- {= "include": "explain_the_solution", "head": 1, "tail": 1 =} -->
 ## Explain the solution  
 
 - Describe any logical inconsistencies in the function specification and suggest improvements. 
 - Describe any assumptions that are not explicitly stated in this function specification.
+
+<!-- {==} -->

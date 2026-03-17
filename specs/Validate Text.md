@@ -2,7 +2,18 @@
 
 ## Functional specification
 
-Import this class from file `src/syncspec/text.py`:
+<!-- {= "include": "format_error", "head": 1, "tail": 1 =} -->
+
+Import logging.
+
+Import the function with this signature from file `src/syncspec/utilities.py`:
+```python
+def format_error(message: str, name: str, line_number: int) -> str:
+```
+
+<!-- {==} -->
+
+<!-- {="import": "src/syncspec/text.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -11,8 +22,9 @@ class Text:
     text: str
     name: str
 ```
+<!-- {==} -->
 
-Import this class from file `src/syncspec/validated_text.py`:
+<!-- {="import": "src/syncspec/validated_text.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -21,8 +33,9 @@ class ValidatedText:
     text: str
     name: str
 ```
+<!-- {==} -->
 
-Import this class from file `src/syncspec/string.py`:
+<!-- {="import": "src/syncspec/string.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -32,14 +45,9 @@ class String:
     line_number: int
     name: str
 ```
+<!-- {==} -->
 
-Import logging.
-Import the function with this signature from file `src/syncspec/utilities.py`:
-```python
-def format_error(message: str, name: str, line_number: int) -> str:
-```
-
-Import this class from file `src/syncspec/validate_text_context.py`:
+<!-- {="import": "src/syncspec/validate_text_context.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass, field
 from typing import Any, Dict
@@ -48,11 +56,12 @@ from typing import Any, Dict
 class ValidateTextContext:
     open_delimiter: str
     close_delimiter: str
-    line_number: int    
+    line_number: int
 ```
+<!-- {==} -->
 
 Do not generate code to initialise the context.
-### Implement the unary function Validate Text
+### Implement a unary function
 
 In the file `src/syncspec/validate_text.py`.
 
@@ -110,18 +119,31 @@ When any of the validation conditions are violated:
 ### Successful return
 
 Return a `ValidatedText` object.  Copy the `Text.text` field to `ValidatedText.text`.
+
+<!-- {= "include": "package", "head": 1, "tail": 1 =} -->
 ## Package
 
-`src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
+- The function is part of the python package `src/syncspec` .   
+- Imports take the form `from src.syncspec.x import X`.
+- Assume Python version 3.10.
+
+<!-- {==} -->
 ## Test the unary function  
 
 In the file `tests/test_validate_text.py`.
+
+<!-- {= "include": "generate_tests", "head": 1, "tail": 1 =} -->
 
 - Write pytests to verify the functionality.
 - Tests should be individual functions. Do not define a test class.    
 - Use `@pytest.mark.parametrize` to create concise tests.  
 
+<!-- {==} -->
+
+<!-- {= "include": "explain_the_solution", "head": 1, "tail": 1 =} -->
 ## Explain the solution  
 
 - Describe any logical inconsistencies in the function specification and suggest improvements. 
 - Describe any assumptions that are not explicitly stated in this function specification.
+
+<!-- {==} -->

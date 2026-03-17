@@ -42,7 +42,7 @@ class CombineNodesContext:
 <!-- {==} -->
 
 Do not generate code to initialise the context.
-### Implement unary function
+### Implement a unary function
 
 In the file `src/syncspec/combine_nodes.py`.
 

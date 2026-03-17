@@ -2,7 +2,18 @@
 
 ## Functional specification
 
-Import this class from file `src/syncspec/node.py`:
+<!-- {= "include": "format_error", "head": 1, "tail": 1 =} -->
+
+Import logging.
+
+Import the function with this signature from file `src/syncspec/utilities.py`:
+```python
+def format_error(message: str, name: str, line_number: int) -> str:
+```
+
+<!-- {==} -->
+
+<!-- {="import": "src/syncspec/node.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -10,17 +21,12 @@ from dataclasses import dataclass
 class Node:
     directive_type: str
     key: str
-    line_number: int    
+    line_number: int
     name: str
 ```
+<!-- {==} -->
 
-Import logging.
-Import the function with this signature from file `src/syncspec/utilities.py`:
-```python
-def format_error(message: str, name: str, line_number: int) -> str:
-```
-
-Import this class from file `src/syncspec/string.py`:
+<!-- {="import": "src/syncspec/string.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -30,37 +36,40 @@ class String:
     line_number: int
     name: str
 ```
+<!-- {==} -->
 
-Import this class from file `src/syncspec/block.py`:
+<!-- {="import": "src/syncspec/block.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 from typing import Dict, Any, Optional
 
 @dataclass
 class Block:
-    directive: Dict[str, Any]  
+    directive: Dict[str, Any]
     prefix: str
     suffix: str
     text: str
     line_number: int
-    name: str    
-```
+    name: str
 
-Import this class from file `src/syncspec/import_block_context.py`:
+```
+<!-- {==} -->
+
+<!-- {="import": "src/syncspec/import_block_context.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass, field
 from typing import ClassVar, Dict, Any
 
 @dataclass
 class ImportBlockContext:
-	import_path: str
+    import_path: str
     open_delimiter: str
-    close_delimiter: str    
+    close_delimiter: str
 ```
+<!-- {==} -->
 
 Do not generate code to initialise the context.
-
-### Implement the unary function Import Block
+### Implement a unary function
 
 In the file `src/syncspec/import_block.py`.
 
@@ -148,20 +157,31 @@ When conditions are violated:
 
 - Line Splitting:  `splitlines(keepends=True)` is used to define "lines". This preserves newline characters during slicing and reconstruction.
 - Integer Validation: Boolean values are excluded from integer checks for head/tail (since bool is a subclass of int in Python).
+
+<!-- {= "include": "package", "head": 1, "tail": 1 =} -->
 ## Package
 
-- `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
+- The function is part of the python package `src/syncspec` .   
+- Imports take the form `from src.syncspec.x import X`.
 - Assume Python version 3.10.
 
+<!-- {==} -->
 ## Test the unary function  
 
 In the file `tests/test_import_block.py`.
+
+<!-- {= "include": "generate_tests", "head": 1, "tail": 1 =} -->
 
 - Write pytests to verify the functionality.
 - Tests should be individual functions. Do not define a test class.    
 - Use `@pytest.mark.parametrize` to create concise tests.  
 
+<!-- {==} -->
+
+<!-- {= "include": "explain_the_solution", "head": 1, "tail": 1 =} -->
 ## Explain the solution  
 
 - Describe any logical inconsistencies in the function specification and suggest improvements. 
 - Describe any assumptions that are not explicitly stated in this function specification.
+
+<!-- {==} -->

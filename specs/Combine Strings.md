@@ -2,7 +2,8 @@
 
 ## Functional specification
 
-Import this class from file `src/syncspec/string.py`:
+
+<!-- {="import": "src/syncspec/string.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -12,19 +13,22 @@ class String:
     line_number: int
     name: str
 ```
+<!-- {==} -->
 
-Import this class from file `src/syncspec/combine_strings_context.py`:
+<!-- {="import": "src/syncspec/combine_strings_context.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass, field
 from typing import Any, Dict
 
 @dataclass
 class CombineStringsContext:
-	text: str
+    text: str
+
 ```
+<!-- {==} -->
 
 Do not generate code to initialise the context.
-### Implement the unary function Combine Strings
+### Implement a unary function
 
 In the file `src/syncspec/combine_strings.py`.
 
@@ -37,18 +41,31 @@ def make_combine_strings(context: CombineStringsContext):
 
  - Append `String.text` to the end of string `CombineStringsContext.text`.
 
+<!-- {= "include": "package", "head": 1, "tail": 1 =} -->
 ## Package
 
-`src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
+- The function is part of the python package `src/syncspec` .   
+- Imports take the form `from src.syncspec.x import X`.
+- Assume Python version 3.10.
+
+<!-- {==} -->
+
 ## Test the unary function  
 
 In the file `tests/test_combine_strings.py`.
+
+<!-- {= "include": "generate_tests", "head": 1, "tail": 1 =} -->
 
 - Write pytests to verify the functionality.
 - Tests should be individual functions. Do not define a test class.    
 - Use `@pytest.mark.parametrize` to create concise tests.  
 
+<!-- {==} -->
+
+<!-- {= "include": "explain_the_solution", "head": 1, "tail": 1 =} -->
 ## Explain the solution  
 
 - Describe any logical inconsistencies in the function specification and suggest improvements. 
 - Describe any assumptions that are not explicitly stated in this function specification.
+
+<!-- {==} -->

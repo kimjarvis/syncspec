@@ -51,3 +51,27 @@
 - Assume Python version 3.10.
 
 <!-- {==} -->
+
+
+<!-- {= "source": "format_error", "head": 1, "tail": 1 =} -->
+
+Import logging.
+
+Import the function with this signature from file `src/syncspec/utilities.py`:
+```python
+def format_error(message: str, name: str, line_number: int) -> str:
+```
+
+
+<!-- {==} -->
+
+<!-- {= "include": "format_error", "head": 1, "tail": 1 =} -->
+
+Import logging.
+
+Import the function with this signature from file `src/syncspec/utilities.py`:
+```python
+def format_error(message: str, name: str, line_number: int) -> str:
+```
+
+<!-- {==} -->

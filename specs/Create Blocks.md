@@ -2,50 +2,60 @@
 
 ## Functional specification
 
+
+<!-- {= "include": "format_error", "head": 1, "tail": 1 =} -->
+
 Import logging.
+
 Import the function with this signature from file `src/syncspec/utilities.py`:
 ```python
 def format_error(message: str, name: str, line_number: int) -> str:
 ```
 
-Import this class from file `src/syncspec/fragment.py`:
+<!-- {==} -->
+
+<!-- {= "import": "src/syncspec/fragment.py", "head": 2, "tail": 2 =} -->
 ```python
 from dataclasses import dataclass
 
 @dataclass
-class Fragment:  
+class Fragment:
     text: str
     line_number: int
     name: str
 ```
+<!-- {==} -->
 
-Import this class from file `src/syncspec/block.py`:
+<!-- {= "import": "src/syncspec/block.py", "head": 2, "tail": 2 =} -->
 ```python
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 @dataclass
 class Block:
-    directive: Dict[str, Any]  
+    directive: Dict[str, Any]
     prefix: str
     suffix: str
     text: str
-    line_number: int    
+    line_number: int
     name: str
-```
 
-Import this class from file `src/syncspec/string.py`:
+```
+<!-- {==} -->
+
+<!-- {= "import": "src/syncspec/string.py", "head": 2, "tail": 2 =} -->
 ```python
 from dataclasses import dataclass
 
 @dataclass
 class String:
     text: str
-    line_number: int    
+    line_number: int
     name: str
 ```
+<!-- {==} -->
 
-Import this class from file `src/syncspec/create_blocks_context.py`:
+<!-- {= "import": "src/syncspec/create_blocks_context.py", "head": 2, "tail": 2 =} -->
 ```python
 from dataclasses import dataclass, field
 from typing import Any, Dict
@@ -56,11 +66,15 @@ class CreateBlocksContext:
 	prefix: str
 	prefix_line_number: int
 	prefix_valid: bool
-	directive: Dict[str, Any]  
+	directive: Dict[str, Any]
 	text: str
-    open_delimiter: str
-    close_delimiter: str	
+	open_delimiter: str
+	close_delimiter: str
+
+
 ```
+<!-- {==} -->
+
 
 Do not generate code to initialise the context.
 
@@ -126,19 +140,32 @@ If index mod 4 equals 3 and and `CreateBlocksContext.prefix_valid` is False then
 - Ensure that keys are valid strings.  Reject dictionaries containing None keys.
 - Mutable Context: `CreateBlocksContext` is mutable and shared across calls to the closure.
 - Brace Wrapping: If raw text fails parsing, {} are added around the text and parsing is retried.  That is, try `json.loads`, and if that fails, attempt `json.loads('{' + text + '}')`.
+
+
+<!-- {= "include": "package", "head": 1, "tail": 1 =} -->
 ## Package
 
-- `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
-- Python Version: assume Python 10.
+- The function is part of the python package `src/syncspec` .   
+- Imports take the form `from src.syncspec.x import X`.
+- Assume Python version 3.10.
+
+<!-- {==} -->
 ## Test the unary function  
 
 In the file `tests/test_create_blocks.py`.
+
+<!-- {= "include": "generate_tests", "head": 1, "tail": 1 =} -->
 
 - Write pytests to verify the functionality.
 - Tests should be individual functions. Do not define a test class.    
 - Use `@pytest.mark.parametrize` to create concise tests.  
 
+<!-- {==} -->
+
+<!-- {= "include": "explain_the_solution", "head": 1, "tail": 1 =} -->
 ## Explain the solution  
 
 - Describe any logical inconsistencies in the function specification and suggest improvements. 
 - Describe any assumptions that are not explicitly stated in this function specification.
+
+<!-- {==} -->

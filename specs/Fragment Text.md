@@ -2,7 +2,8 @@
 
 ## Functional specification
 
-Import this class from file `src/syncspec/validated_text.py`:
+
+<!-- {="import": "src/syncspec/validated_text.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -11,20 +12,23 @@ class ValidatedText:
     text: str
     name: str
 ```
+<!-- {==} -->
 
-Import this class from file `src/syncspec/fragment.py`:
+
+<!-- {="import": "src/syncspec/fragment.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
 @dataclass
-class Fragment:  
+class Fragment:
     text: str
     line_number: int
     name: str
 ```
+<!-- {==} -->
 
 
-Import this class from file `src/syncspec/fragment_text_context.py`:
+<!-- {="import": "src/syncspec/fragment_text_context.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass, field
 from typing import Any, Dict
@@ -33,10 +37,12 @@ from typing import Any, Dict
 class FragmentTextContext:
     open_delimiter: str
     close_delimiter: str
-    line_number: int    
+    line_number: int
 ```
+<!-- {==} -->
 
-### Implement the unary function Fragment Text
+Do not generate code to initialise the context.
+### Implement a unary function
 
 In the file `src/syncspec/fragment_text.py`.
 
@@ -88,17 +94,31 @@ Copy `ValidatedText.name` into the Fragment
 - Delimiters may contain regex special characters  e.g., `*`.
 - Strings are valid Unicode strings.
 - The text has POSIX line endings  e.t.,`\n`.
+
+<!-- {= "include": "package", "head": 1, "tail": 1 =} -->
 ## Package
 
-`src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
+- The function is part of the python package `src/syncspec` .   
+- Imports take the form `from src.syncspec.x import X`.
+- Assume Python version 3.10.
+
+<!-- {==} -->
 ## Test the unary function  
 
 In the file `tests/test_fragment_text.py`.
 
+<!-- {= "include": "generate_tests", "head": 1, "tail": 1 =} -->
+
 - Write pytests to verify the functionality.
 - Tests should be individual functions. Do not define a test class.    
-- Use `@pytest.mark.parametrize` to create concise tests.
+- Use `@pytest.mark.parametrize` to create concise tests.  
+
+<!-- {==} -->
+
+<!-- {= "include": "explain_the_solution", "head": 1, "tail": 1 =} -->
 ## Explain the solution  
 
 - Describe any logical inconsistencies in the function specification and suggest improvements. 
 - Describe any assumptions that are not explicitly stated in this function specification.
+
+<!-- {==} -->

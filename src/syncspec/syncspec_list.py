@@ -24,7 +24,6 @@ def make_syncspec_list(context: SyncspecListContext):
             file_obj = syncspec_text(text)
             files.append(file_obj)
 
-        print("debug 01",files)
         return files, text_context.graph, text_context.monad
 
     return syncspec_list

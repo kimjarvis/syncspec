@@ -1,3 +1,23 @@
 strict digraph {
-"source_invalid_include.md_1" [key="include1.txt", directive_type=source, label="source\ninvalid_include.md\n:1", shape=rectangle, style=filled, fillcolor=lightblue];
+"export_src/syncspec/node.py_0" [key="src/syncspec/node.py", directive_type=export, label="export\nsrc/syncspec/node.py\n:0", shape=rectangle, style=filled, fillcolor=red];
+"import_Combine Nodes.md_5" [key="src/syncspec/node.py", directive_type=import, label="import\nCombine Nodes.md\n:5", shape=rectangle, style=filled, fillcolor=yellow];
+"export_src/syncspec/edge.py_0" [key="src/syncspec/edge.py", directive_type=export, label="export\nsrc/syncspec/edge.py\n:0", shape=rectangle, style=filled, fillcolor=red];
+"import_Combine Nodes.md_18" [key="src/syncspec/edge.py", directive_type=import, label="import\nCombine Nodes.md\n:18", shape=rectangle, style=filled, fillcolor=yellow];
+"export_src/syncspec/combine_nodes_context.py_0" [key="src/syncspec/combine_nodes_context.py", directive_type=export, label="export\nsrc/syncspec/combine_nodes_context.py\n:0", shape=rectangle, style=filled, fillcolor=red];
+"import_Combine Nodes.md_32" [key="src/syncspec/combine_nodes_context.py", directive_type=import, label="import\nCombine Nodes.md\n:32", shape=rectangle, style=filled, fillcolor=yellow];
+"include_Combine Nodes.md_84" [key=package, directive_type=include, label="include\nCombine Nodes.md\n:84", shape=rectangle, style=filled, fillcolor=lightgreen];
+"include_Combine Nodes.md_96" [key="generate_tests", directive_type=include, label="include\nCombine Nodes.md\n:96", shape=rectangle, style=filled, fillcolor=lightgreen];
+"include_Combine Nodes.md_104" [key="explain_the_solution", directive_type=include, label="include\nCombine Nodes.md\n:104", shape=rectangle, style=filled, fillcolor=lightgreen];
+"source_Common.md_2" [key="explain_the_solution", directive_type=source, label="source\nCommon.md\n:2", shape=rectangle, style=filled, fillcolor=lightblue];
+"include_Common.md_10" [key="explain_the_solution", directive_type=include, label="include\nCommon.md\n:10", shape=rectangle, style=filled, fillcolor=lightgreen];
+"source_Common.md_19" [key="generate_tests", directive_type=source, label="source\nCommon.md\n:19", shape=rectangle, style=filled, fillcolor=lightblue];
+"include_Common.md_27" [key="generate_tests", directive_type=include, label="include\nCommon.md\n:27", shape=rectangle, style=filled, fillcolor=lightgreen];
+"source_Common.md_36" [key=package, directive_type=source, label="source\nCommon.md\n:36", shape=rectangle, style=filled, fillcolor=lightblue];
+"include_Common.md_46" [key=package, directive_type=include, label="include\nCommon.md\n:46", shape=rectangle, style=filled, fillcolor=lightgreen];
+"export_src/syncspec/node.py_0" -> "import_Combine Nodes.md_5";
+"export_src/syncspec/edge.py_0" -> "import_Combine Nodes.md_18";
+"export_src/syncspec/combine_nodes_context.py_0" -> "import_Combine Nodes.md_32";
+"source_Common.md_2" -> "include_Common.md_10";
+"source_Common.md_19" -> "include_Common.md_27";
+"source_Common.md_36" -> "include_Common.md_46";
 }

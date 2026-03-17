@@ -14,154 +14,153 @@ from src.syncspec.syncspec_list_context import SyncspecListContext
 from src.syncspec.syncspec_list import make_syncspec_list
 
 
-def error_exit(message: str) -> None:
-    """Print error message to stderr and terminate."""
-    print(message, file=sys.stderr)
-    sys.exit(1)
+def validate_delimiters(open_del: str, close_del: str) -> None:
+    if not open_del or not close_del:
+        sys.exit("Error: Delimiters cannot be empty strings.")
+    if "\n" in open_del or "\n" in close_del:
+        sys.exit("Error: Delimiters cannot contain newlines.")
+    if open_del == close_del:
+        sys.exit("Error: Delimiters must be distinct.")
+    if open_del in close_del or close_del in open_del:
+        sys.exit("Error: Delimiters cannot overlap structurally.")
 
 
-def validate_args(args: argparse.Namespace) -> None:
-    """Validate command line arguments according to specification."""
-    # --log_file
-    if args.log_file:
-        p = Path(args.log_file)
-        if p.suffix != ".log":
-            error_exit("Error: --log_file must have .log suffix.")
-        if not p.parent.exists():
-            error_exit("Error: --log_file parent directory must exist.")
-
-    # --keyvalue_file
-    if args.keyvalue_file:
-        p = Path(args.keyvalue_file)
-        if p.suffix != ".json":
-            error_exit("Error: --keyvalue_file must have .json suffix.")
-        if not p.parent.exists():
-            error_exit("Error: --keyvalue_file parent directory must exist.")
-
-    # --graph_file
-    graph_path = Path(args.graph_file)
-    if graph_path.suffix != ".dot":
-        error_exit("Error: --graph_file must have .dot suffix.")
-    if not graph_path.parent.exists():
-        error_exit("Error: --graph_file parent directory must exist.")
-
-    # --output
-    if not Path(args.output).is_dir():
-        error_exit("Error: --output must be an existing directory.")
-
-    # path (positional)
-    if not Path(args.path).is_dir():
-        error_exit("Error: positional path must be an existing directory.")
+def validate_path_suffix(path: Path, suffix: str, label: str) -> None:
+    if path.suffix != suffix:
+        sys.exit(f"Error: {label} must have suffix {suffix}.")
+    if not path.parent.exists():
+        sys.exit(f"Error: Parent directory for {label} does not exist.")
 
 
-def load_monad(args: argparse.Namespace) -> Dict[str, Any]:
-    """Load monad dictionary from keyvalue file or default."""
-    if args.keyvalue_file:
-        input_path = Path(args.keyvalue_file)
-        # If specified, file must exist to be read
-        if not input_path.exists():
-            error_exit(f"Error: Specified --keyvalue_file does not exist: {input_path}")
-    else:
-        input_path = Path("syncspec.json")
-        # If default, missing file is acceptable (returns empty dict)
-        if not input_path.exists():
-            return {}
+def validate_dir(path: Path, label: str) -> None:
+    if not path.exists() or not path.is_dir():
+        sys.exit(f"Error: {label} must be an existing directory.")
 
+
+def load_json_state(path: Path) -> Dict[str, Any]:
     try:
-        with open(input_path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            if not all(isinstance(k, str) for k in data.keys()):
-                raise ValueError("JSON keys must be strings.")
-            return data
-    except (json.JSONDecodeError, ValueError, OSError) as e:
-        error_exit(f"Error: Failed to load JSON from {input_path}: {e}")
+        if not isinstance(data, dict):
+            sys.exit("Error: State file must contain a JSON object.")
+        if not all(isinstance(k, str) for k in data.keys()):
+            sys.exit("Error: State file keys must be strings.")
+        return data
+    except json.JSONDecodeError as e:
+        sys.exit(f"Error: Invalid JSON in state file: {e}")
+    except Exception as e:
+        sys.exit(f"Error: Failed to read state file: {e}")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--open_delimiter", default="{{")
     parser.add_argument("--close_delimiter", default="}}")
-    parser.add_argument("--log_file")
-    parser.add_argument("--graph_file", default="syncspec.dot")
-    parser.add_argument("--keyvalue_file")
-    parser.add_argument("--output", required=True)
-    parser.add_argument("--import_path")
-    parser.add_argument("path")
+    parser.add_argument("--log_file", type=Path)
+    parser.add_argument("--graph_file", type=Path, default=Path("syncspec.dot"))
+    parser.add_argument("--keyvalue_file", type=Path)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--import_path", type=Path)
+    parser.add_argument("path", type=Path)
+
     args = parser.parse_args()
 
-    validate_args(args)
+    # Validate Delimiters
+    try:
+        validate_delimiters(args.open_delimiter, args.close_delimiter)
+    except SystemExit:
+        raise
+    except Exception as e:
+        sys.exit(f"Error: Delimiter validation failed: {e}")
+
+    # Validate Paths
+    validate_dir(args.output, "--output")
+    validate_dir(args.path, "path")
+
+    if args.log_file:
+        validate_path_suffix(args.log_file, ".log", "--log_file")
+
+    validate_path_suffix(args.graph_file, ".dot", "--graph_file")
+
+    if args.keyvalue_file:
+        validate_path_suffix(args.keyvalue_file, ".json", "--keyvalue_file")
 
     # Setup Logging
+    log_handlers = []
     if args.log_file:
-        logging.basicConfig(
-            filename=args.log_file,
-            level=logging.DEBUG,
-            format="%(levelname)s - %(message)s"
-        )
+        log_handlers.append(logging.FileHandler(args.log_file, encoding="utf-8"))
     else:
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format="%(levelname)s - %(message)s"
-        )
+        log_handlers.append(logging.StreamHandler())
 
-    # Load Monad
-    monad = load_monad(args)
+    logging.basicConfig(
+        handlers=log_handlers,
+        format="%(levelname)s - %(message)s",
+        level=logging.WARNING
+    )
+
+    # Load State
+    state_dict = {}
+    if args.keyvalue_file:
+        state_dict = load_json_state(args.keyvalue_file)
+    else:
+        default_state = Path("syncspec.json")
+        if default_state.exists():
+            state_dict = load_json_state(default_state)
 
     # Construct Context
     import_path = args.import_path if args.import_path else args.path
     context = SyncspecListContext(
         open_delimiter=args.open_delimiter,
         close_delimiter=args.close_delimiter,
-        monad=monad,
-        import_path=import_path
+        monad=state_dict,
+        import_path=str(import_path)
     )
 
-    # Create Processor
-    try:
-        syncspec_list_func = make_syncspec_list(context)
-    except ValueError as e:
-        error_exit(f"Error: make_syncspec_list failed: {e}")
-
-    # Traverse Input Directory
+    # Traverse Markdown Files
     text_objects: List[Text] = []
-    root_path = Path(args.path)
     try:
-        for md_file in root_path.rglob("*.md"):
-            content = md_file.read_text(encoding="utf-8")
-            relative_name = str(md_file.relative_to(root_path))
-            text_objects.append(Text(text=content, name=relative_name))
-    except OSError as e:
-        error_exit(f"Error: Failed to read markdown files: {e}")
+        for md_file in args.path.rglob("*.md"):
+            if md_file.is_file():
+                content = md_file.read_text(encoding="utf-8")
+                rel_name = str(md_file.relative_to(args.path))
+                text_objects.append(Text(text=content, name=rel_name))
+    except Exception as e:
+        sys.exit(f"Error: Failed to traverse directory: {e}")
 
-    # Process
+    # Execute Syncspec
     try:
-        files, graph, data_dict = syncspec_list_func(text_objects)
+        syncspec_fn = make_syncspec_list(context)
+        files, graph, new_state = syncspec_fn(text_objects)
     except ValueError as e:
-        error_exit(f"Error: syncspec_list failed: {e}")
+        sys.exit(f"Error: Syncspec execution failed: {e}")
+    except Exception as e:
+        sys.exit(f"Error: Unexpected error during syncspec: {e}")
 
     # Write Output Files
-    output_path = Path(args.output)
-    for file_obj in files:
-        out_file = output_path / file_obj.name
-        try:
-            out_file.parent.mkdir(parents=True, exist_ok=True)
-            out_file.write_text(file_obj.text, encoding="utf-8")
-        except OSError as e:
-            error_exit(f"Error: Failed to write {out_file}: {e}")
+    try:
+        for file_obj in files:
+            out_path = args.output / file_obj.name
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_text(file_obj.text, encoding="utf-8")
+    except Exception as e:
+        sys.exit(f"Error: Failed to write output files: {e}")
 
     # Write Graph
     try:
         nx.nx_pydot.write_dot(graph, args.graph_file)
     except Exception as e:
-        error_exit(f"Error: Failed to write graph {args.graph_file}: {e}")
+        sys.exit(f"Error: Failed to write graph file: {e}")
 
-    # Write JSON State
-    output_json_path = Path(args.keyvalue_file) if args.keyvalue_file else Path("syncspec.json")
+    # Write State
     try:
-        with open(output_json_path, "w", encoding="utf-8") as f:
-            json.dump(data_dict, f)
+        if not all(isinstance(k, str) for k in new_state.keys()):
+            sys.exit("Error: Output state keys must be strings.")
+
+        out_state_path = args.keyvalue_file if args.keyvalue_file else Path("syncspec.json")
+        with open(out_state_path, "w", encoding="utf-8") as f:
+            json.dump(new_state, f)
     except Exception as e:
-        error_exit(f"Error: Failed to write JSON to {output_json_path}: {e}")
+        sys.exit(f"Error: Failed to write state file: {e}")
 
 
 if __name__ == "__main__":

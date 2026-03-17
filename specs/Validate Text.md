@@ -22,6 +22,17 @@ class ValidatedText:
     name: str
 ```
 
+Import this class from file `src/syncspec/string.py`:
+```python
+from dataclasses import dataclass
+
+@dataclass
+class String:
+    text: str
+    line_number: int
+    name: str
+```
+
 Import logging.
 Import the function with this signature from file `src/syncspec/utilities.py`:
 ```python
@@ -49,37 +60,26 @@ Define a closure factory with a unary function with signature:
 
 ```python
 def make_validate_text(context: ValidateTextContext):
-    def validate_text(text: Text) -> Union[ValidatedText, None]:
+    def validate_text(text: Text) -> Union[ValidatedText, String]:
 ```
-
-
 ### Verify the context
 
-#### Ensure that:
-
-- Delimiters are valid Unicode strings.
-- Delimiters are not empty strings.
-- Delimiters are distinct, e.g., they will not be `{{` and `{{`.
-- Delimiters do not overlap structurally, , e.g., they will not be `{{` and `{`. 
-- Delimiters do not contain newlines.
 #### Assume that:
 
 - The context is instantiated before the factory is called.
 - Delimiters may contain regex special characters  e.g., `*`.  Delimiters are treated as literal strings using `str.find` rather than compiled regex patterns.
 - The text has POSIX line endings  e.t.,`\n`.
-
 ### Keep track of line numbers
 
 - Field `line_number` keeps track of line numbers within text.
 - Line numbers are 1-based.  The initial value of `ValidateTextContext.line_number` is 1.
-- Empty text increments line_number by 1 (represents one logical line).
+- Empty text has a line_number of 1.
 - The line number reported when an error is logged is the line number where the error was detected.  
-- Line Splitting: splitlines(keepends=True) is used to define "lines". This preserves newline characters during slicing and reconstruction.
+- Line Splitting: `splitlines(keepends=True)` is used to define "lines". This preserves newline characters during slicing and reconstruction.
 ### Verify the text
 
 #### Ensure that:
 
-- text is a valid Unicode string.
 - Delimiters only appear in balanced pairs. e.g., input may contain `{{A}}B{{C}}`.
 - The open delimiter appears before any close delimiters in the text.
 	- So, the last delimiter appearing in the text is the close delimiter.
@@ -90,18 +90,23 @@ def make_validate_text(context: ValidateTextContext):
 	- Two pairs `A{{B}}C{{D}}E` is valid.  
 	- Three pairs `A{{B}}C{{D}}E{{F}}G` are not valid.
 
+#### Assume that:
+
+- Delimiters are valid Unicode strings.
+- Delimiters are not empty strings.
+- Delimiters are distinct, e.g., they will not be `{{` and `{{`.
+- Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. 
+- Delimiters do not contain newlines.
+
 ### Note that
 
 Requiring an even number of delimiter pairs is a specific requirement for this application
 
-### Errors
-
-Raise a Value Error during factory creation for configuration errors.
+### Error return
 
 When any of the validation conditions are violated:
-- return None.
-- call `format_error` to format an error messages.  Pass an informative message,   `Text.name` and the line number on which the error was detected.  Use python logging to log the error.
-
+- Call `format_error` to format an error messages.  Pass an informative message,   `Text.name` and the line number on which the error was detected.  Use python logging to log the error.
+- Return an object of type `String`.  Copy the text, name from the parameter Text object.  Copy the line number on which the error was detected.
 ### Successful return
 
 Return a `ValidatedText` object.  Copy the `Text.text` field to `ValidatedText.text`.

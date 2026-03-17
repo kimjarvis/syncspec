@@ -1,70 +1,83 @@
-# tests/test_validate_text.py
 import pytest
 import logging
-from src.syncspec.text import Text
-from src.syncspec.validated_text import ValidatedText
-from src.syncspec.validate_text_context import ValidateTextContext
 from src.syncspec.validate_text import make_validate_text
+from src.syncspec.text import Text
+from src.syncspec.validate_text_context import ValidateTextContext
+from src.syncspec.validated_text import ValidatedText
+from src.syncspec.string import String
 
 
-@pytest.fixture
-def valid_context():
-    return ValidateTextContext(open_delimiter="{{", close_delimiter="}}", line_number=1)
+@pytest.mark.parametrize(
+    "content, expected_type, error_msg",
+    [
+        ("", ValidatedText, None),
+        ("No delimiters", ValidatedText, None),
+        ("A{{B}}C{{D}}E", ValidatedText, None),
+        ("A{{B}}C", String, "Odd number"),
+        ("A{{B}}C{{D}}E{{F}}G", String, "Odd number"),
+        ("{{A{{B}}C}}", String, "Nested"),
+        ("}}A{{B}}", String, "Close delimiter"),
+        ("{{A", String, "Unclosed"),
+    ],
+)
+def test_validate_text_logic(content, expected_type, error_msg, caplog):
+    context = ValidateTextContext(open_delimiter="{{", close_delimiter="}}", line_number=1)
+    validator = make_validate_text(context)
+    text_obj = Text(text=content, name="test.txt")
 
-
-@pytest.mark.parametrize("open_delim, close_delim, expected_error", [
-    ("", "}}", "empty"),
-    ("{{", "", "empty"),
-    ("{{", "{{", "distinct"),
-    ("{{", "{", "overlap"),
-    ("{\n", "}}", "newline"),
-])
-def test_make_validate_text_invalid_context(open_delim, close_delim, expected_error):
-    context = ValidateTextContext(open_delimiter=open_delim, close_delimiter=close_delim, line_number=1)
-    with pytest.raises(ValueError):
-        make_validate_text(context)
-
-
-@pytest.mark.parametrize("text_content, expected_pairs", [
-    ("", 0),
-    ("Hello World", 0),
-    ("{{A}}B{{C}}", 2),
-    ("{{A}}\n{{B}}", 2),
-])
-def test_validate_text_success(valid_context, text_content, expected_pairs):
-    validator = make_validate_text(valid_context)
-    text_obj = Text(text=text_content, name="test.txt")
-    result = validator(text_obj)
-    assert isinstance(result, ValidatedText)
-    assert result.text == text_content
-
-
-@pytest.mark.parametrize("text_content, error_keyword", [
-    ("{{A}}", "even"),           # 1 pair (odd)
-    ("{{A}}B{{C}}D{{E}}", "even"), # 3 pairs (odd)
-    ("{{A{{B}}C}}", "Nested"),   # Nesting
-    ("A}}B", "close"),           # Unmatched close
-    ("{{A", "Unbalanced"),       # Unmatched open
-])
-def test_validate_text_failure(valid_context, text_content, error_keyword, caplog):
     caplog.set_level(logging.ERROR)
-    validator = make_validate_text(valid_context)
-    text_obj = Text(text=text_content, name="test.txt")
     result = validator(text_obj)
-    assert result is None
-    assert any(error_keyword in record.message for record in caplog.records)
+
+    assert isinstance(result, expected_type)
+    if error_msg:
+        assert error_msg in caplog.text
+    else:
+        assert caplog.text == ""
 
 
-@pytest.mark.parametrize("text_content, expected_line", [
-    ("}}", 1),
-    ("A\n}}", 2),
-    ("A\nB\n}}", 3),
-])
-def test_validate_text_line_numbers(valid_context, text_content, expected_line, caplog):
+def test_context_line_number_update_non_empty():
+    context = ValidateTextContext(open_delimiter="{{", close_delimiter="}}", line_number=10)
+    validator = make_validate_text(context)
+    text_obj = Text(text="Line1\nLine2\n", name="test.txt")
+
+    validator(text_obj)
+    # "Line1\n", "Line2\n" -> 2 lines
+    assert context.line_number == 12
+
+
+def test_context_line_number_update_empty():
+    context = ValidateTextContext(open_delimiter="{{", close_delimiter="}}", line_number=5)
+    validator = make_validate_text(context)
+    text_obj = Text(text="", name="test.txt")
+
+    validator(text_obj)
+    # Empty text increments by 1
+    assert context.line_number == 6
+
+
+def test_error_line_number_accuracy(caplog):
+    context = ValidateTextContext(open_delimiter="{{", close_delimiter="}}", line_number=10)
+    validator = make_validate_text(context)
+    # Error at line 11 (second line)
+    text_obj = Text(text="Line1\n}}\n", name="test.txt")
+
     caplog.set_level(logging.ERROR)
-    validator = make_validate_text(valid_context)
-    text_obj = Text(text=text_content, name="test.txt")
     result = validator(text_obj)
-    assert result is None
-    # Verify line number is in the log message (format_error includes it)
-    assert any(str(expected_line) in record.message for record in caplog.records)
+
+    assert isinstance(result, String)
+    assert result.line_number == 11
+    assert "Close delimiter" in caplog.text
+
+
+def test_odd_pairs_error_line(caplog):
+    context = ValidateTextContext(open_delimiter="{{", close_delimiter="}}", line_number=1)
+    validator = make_validate_text(context)
+    # 1 pair on line 1
+    text_obj = Text(text="{{A}}", name="test.txt")
+
+    caplog.set_level(logging.ERROR)
+    result = validator(text_obj)
+
+    assert isinstance(result, String)
+    assert result.line_number == 1
+    assert "Odd number" in caplog.text

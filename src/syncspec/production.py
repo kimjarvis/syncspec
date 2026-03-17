@@ -16,6 +16,6 @@ def production(facts, rules):
                 new_facts.extend(res) if isinstance(res, (list, tuple)) else new_facts.append(res)
             else:
                 new_facts.append(fact)
-        # print(facts)
+        print("debug 00",facts)
         facts = new_facts
     return facts

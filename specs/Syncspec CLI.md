@@ -61,6 +61,13 @@ And required positional parameter `path`
 - `--graph_file` must be a valid file path.  The file suffix must be `.dot` . 
 - `--output` must be a path to an existing directory.
 - `path` is a path to an existing directory.
+#### Ensure that:
+
+- Delimiters are valid Unicode strings.
+- Delimiters are not empty strings.
+- Delimiters are distinct, e.g., they will not be `{{` and `{{`.
+- Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. 
+- Delimiters do not contain newlines.
 
 Validation failures shall print an informative message to `stderr` and terminate via `sys.exit(1)`.
 

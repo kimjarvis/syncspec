@@ -21,4 +21,3 @@ from syncspec import syncspec
 
 syncspec("specs/")
 ```
-

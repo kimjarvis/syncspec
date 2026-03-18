@@ -1,8 +1,0 @@
-strict digraph {
-"source_test_syncspec.md_2" [key=a, directive_type=source, label="source\ntest_syncspec.md\n:2", shape=rectangle, style=filled, fillcolor=lightblue];
-"source_test_syncspec.md_3" [key=b, directive_type=source, label="source\ntest_syncspec.md\n:3", shape=rectangle, style=filled, fillcolor=lightblue];
-"include_test_syncspec.md_5" [key=a, directive_type=include, label="include\ntest_syncspec.md\n:5", shape=rectangle, style=filled, fillcolor=lightgreen];
-"include_test_syncspec.md_6" [key=b, directive_type=include, label="include\ntest_syncspec.md\n:6", shape=rectangle, style=filled, fillcolor=lightgreen];
-"source_test_syncspec.md_2" -> "include_test_syncspec.md_5";
-"source_test_syncspec.md_3" -> "include_test_syncspec.md_6";
-}

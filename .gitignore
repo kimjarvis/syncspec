@@ -1,3 +1,6 @@
+syncspec.dot
+syncspec.json
+syncspec.log
 input/
 output/
 .idea/

@@ -1,20 +1,24 @@
 # syncspec
 
-Synchronize a functional specification
+Transclusion for Spec Driven Development
 
-# Initial setup
-
-```bash
-uv init .
-uv venv
-source .venv/bin/activate
-uv add pydantic pytest
-```
-
-Create an obsidian vault named "specs" inside.
+# Install
 
 ```bash
-uv run pytest
+pip install syncspec
 ```
 
-Branch marker
+# Command line usage
+
+```bash
+syncspec -i specs/
+```
+
+# Python interface
+
+```python
+from syncspec import syncspec
+
+syncspec("specs/")
+```
+

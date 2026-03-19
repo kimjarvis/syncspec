@@ -146,8 +146,8 @@ If index mod 4 equals 3 and and `CreateBlocksContext.prefix_valid` is False then
 ## Package
 
 - The function is part of the python package `src/syncspec` .   
-- Imports take the form `from src.syncspec.x import X`.
-- Assume Python version 3.6.
+- Imports from the package take the form `from src.syncspec.x import X`.
+- Assume Python version 3.7.
 
 <!-- {==} -->
 ## Test the unary function  

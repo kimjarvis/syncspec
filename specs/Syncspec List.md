@@ -96,17 +96,25 @@ Return a tuple containing:
 - The list of file objects
 - An object of type nx.DiGraph  `SyncspecTextContext.G`
 - Dictionary `SyncspecTextContext.monad`
+
+<!-- {= "include": "package_assumptions", "head": 1, "tail": 1 =} -->
 ## Assume
 
-- The process has permission to check existence of `log_file` and `graph_file` and read `import_path`.
-- `networkx` is installed and available.
+- UTF-8 encoding is used for all file I/O.
+- "Valid file path" implies the parent directory must exist.
+- Package pydot is installed.  The executable is accessible.
+- Graphviz is installed.  The executable is accessible.
+- Package networkx is installed.  The executable is accessible.
+- The user has read and write access to the file locations.
+<!-- {==} -->
+
 
 <!-- {= "include": "package", "head": 1, "tail": 1 =} -->
 ## Package
 
 - The function is part of the python package `src/syncspec` .   
-- Imports take the form `from src.syncspec.x import X`.
-- Assume Python version 3.6.
+- Imports from the package take the form `from src.syncspec.x import X`.
+- Assume Python version 3.7.
 
 <!-- {==} -->
 

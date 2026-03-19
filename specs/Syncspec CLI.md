@@ -130,7 +130,7 @@ Catch any exception raised by the conversion.  If an exception is raised print a
 
 - The function is part of the python package `src/syncspec` .   
 - Imports take the form `from src.syncspec.x import X`.
-- Assume Python version 3.10.
+- Assume Python version 3.6.
 
 <!-- {==} -->
 

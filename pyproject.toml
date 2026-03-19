@@ -10,7 +10,7 @@ readme = "README.md"
 authors = [
     {name = "Kim Jarvis", email = "kim.jarvis@tpfsystems.com"}
 ]
-license = {text = "MIT"}
+license = "MIT"
 requires-python = ">=3.6"
 dependencies = [
     "jinja2>=3.0.0",      # Compatible with Python 3.6+

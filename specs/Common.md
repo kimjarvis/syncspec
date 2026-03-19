@@ -38,7 +38,7 @@
 
 - The function is part of the python package `src/syncspec` .   
 - Imports take the form `from src.syncspec.x import X`.
-- Assume Python version 3.10.
+- Assume Python version 3.6.
 
 
 <!-- {==} -->
@@ -48,7 +48,7 @@
 
 - The function is part of the python package `src/syncspec` .   
 - Imports take the form `from src.syncspec.x import X`.
-- Assume Python version 3.10.
+- Assume Python version 3.6.
 
 <!-- {==} -->
 

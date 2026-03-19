@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+import json
 
 # Add src directory to Python path for development
 src_path = Path(__file__).parent.parent / "src"
@@ -15,8 +16,23 @@ def test_syncspec_import():
     from syncspec import syncspec
     assert callable(syncspec)
 
-def test_syncspec_function():
-    """Test the syncspec function"""
-    result = syncspec()
-    assert result is not None
-    # Add more specific tests based on your function's behavior
+import networkx as nx
+from src.syncspec.function import syncspec
+
+def test_syncspec():
+    keyvalue = {}
+    g, okv = syncspec(
+        path="../syncspec-test/input/",
+        output="../syncspec-test/output/",
+        open_delimiter="{=",
+        close_delimiter="=}",
+        import_path="../syncspec-test/input/",
+        keyvalue=keyvalue,
+        log_file="syncspec.log"
+
+    )
+    nx.nx_pydot.write_dot(g, "syncspec.dot")
+
+    # Convert dictionary to JSON and write to file
+    with open("syncspec.json", "w", encoding="utf-8") as f:
+        json.dump(okv, f, indent=2)

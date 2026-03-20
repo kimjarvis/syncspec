@@ -28,6 +28,10 @@ def make_import_block(context: ImportBlockContext):
                 return log_err("File does not exist")
             if not target.is_file():
                 return log_err("Not a file")
+            if target.is_symlink():
+                link_target = target.resolve()
+                if not str(link_target).startswith(str(root) + '/') and str(link_target) != str(root):
+                    return log_err("Symlink target outside allowed directory")
 
             # Read and Decode
             try:
@@ -40,8 +44,8 @@ def make_import_block(context: ImportBlockContext):
             return log_err(f"Validation failed: {str(e)}")
 
         # Head/Tail Validation
-        head = block.directive.get("head", 0)
-        tail = block.directive.get("tail", 0)
+        head = block.directive.get("head", 1)
+        tail = block.directive.get("tail", 1)
 
         if not isinstance(head, int) or isinstance(head, bool) or head < 0:
             return log_err("Invalid head value")
@@ -58,13 +62,14 @@ def make_import_block(context: ImportBlockContext):
         bottom = "".join(u_lines[-tail:] if tail > 0 else [])
 
         # Construct Result String
+        eol_char = "" if block.directive.get("eol") is False else "\n"
         s_text = (
                 context.open_delimiter +
                 block.prefix +
                 context.close_delimiter +
                 top +
                 v +
-                "\n" +
+                eol_char +
                 bottom +
                 context.open_delimiter +
                 block.suffix +

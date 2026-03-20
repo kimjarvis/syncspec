@@ -39,7 +39,6 @@ class Block:
     text: str
     line_number: int
     name: str
-
 ```
 <!-- {==} -->
 

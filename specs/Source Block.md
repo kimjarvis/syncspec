@@ -51,7 +51,6 @@ class Block:
     text: str
     line_number: int
     name: str
-
 ```
 <!-- {==} -->
 
@@ -97,8 +96,10 @@ Return a tuple containing object of type String:
 
 Copy to `Block.text` to `text`.
 
-- If dictionary `Block.directive` contains a key "head", call the value `Block.directive["head"]` h, otherwise let h=0.
-- If dictionary `Block.directive` contains a key "tail", call the value `Block.directive["head"]` t, otherwise let t=0.
+- If dictionary `Block.directive` contains a key "head", call the value `Block.directive["head"]` h, otherwise let h=1.
+- If dictionary `Block.directive` contains a key "tail", call the value `Block.directive["tail"]` t, otherwise let t=1.
+
+The default value of "head" and "tail" shall be 1. 
 
 Ensure that:
 
@@ -157,4 +158,153 @@ In the file `tests/test_source_block.py`.
 - Describe any logical inconsistencies in the function specification and suggest improvements. 
 - Describe any assumptions that are not explicitly stated in this function specification.
 
+<!-- {==} -->
+
+<!-- {= "include": "current_implementation", "head": 1, "tail": 1 =} -->
+## Current implementation
+
+- Minimise changes to the current implementation.
+
+This is the current implementation:
+<!-- {==} -->
+
+<!-- {= "import": "src/syncspec/source_block.py", "head": 2, "tail": 2 =} -->
+```python
+import logging
+from typing import Any, Dict, Tuple, Union
+
+from src.syncspec.node import Node
+from src.syncspec.utilities import format_error
+from src.syncspec.string import String
+from src.syncspec.block import Block
+from src.syncspec.source_block_context import SourceBlockContext
+
+logger = logging.getLogger(__name__)
+
+
+def make_source_block(context: SourceBlockContext):
+    def source_block(block: Block) -> Union[Tuple[String, Node], Block, String]:
+        if "source" not in block.directive:
+            return block
+
+        key = block.directive["source"]
+        # Spec updated: defaults are now 1
+        h = block.directive.get("head", 1)
+        t = block.directive.get("tail", 1)
+
+        # Validate head/tail
+        if not isinstance(h, int) or h < 0 or not isinstance(t, int) or t < 0:
+            msg = "Head and tail must be non-negative integers"
+            logger.error(format_error(msg, block.name, block.line_number))
+            return _make_error_string(context, block)
+
+        lines = block.text.split('\n')
+        if len(lines) < h + t:
+            msg = f"Cannot remove {h + t} lines from {len(lines)}"
+            logger.error(format_error(msg, block.name, block.line_number))
+            return _make_error_string(context, block)
+
+        # Process text
+        modified_text = '\n'.join(lines[h : len(lines) - t if t else None])
+        context.state[key] = modified_text
+
+        # Construct return objects
+        string_obj = _make_decorated_string(context, block)
+        node_obj = Node(
+            directive_type="source",
+            key=key,
+            line_number=block.line_number,
+            name=block.name
+        )
+        return (string_obj, node_obj)
+
+    return source_block
+
+
+def _make_decorated_string(context: SourceBlockContext, block: Block) -> String:
+    text = (
+        context.open_delimiter +
+        block.prefix +
+        context.close_delimiter +
+        block.text +
+        context.open_delimiter +
+        block.suffix +
+        context.close_delimiter
+    )
+    return String(text=text, line_number=block.line_number, name=block.name)
+
+
+def _make_error_string(context: SourceBlockContext, block: Block) -> String:
+    return _make_decorated_string(context, block)
+```
+<!-- {==} -->
+
+
+<!-- {= "import": "tests/test_source_block.py", "head": 2, "tail": 2 =} -->
+```python
+import pytest
+from src.syncspec.source_block import make_source_block
+from src.syncspec.source_block_context import SourceBlockContext
+from src.syncspec.block import Block
+from src.syncspec.string import String
+from src.syncspec.node import Node
+
+
+@pytest.mark.parametrize(
+    "directive, expected_type",
+    [
+        ({}, Block),
+        ({"source": "key"}, tuple),
+    ]
+)
+def test_directive_handling(directive, expected_type):
+    ctx = SourceBlockContext(state={}, open_delimiter="[", close_delimiter="]")
+    block = Block(directive=directive, prefix="", suffix="", text="a\nb\nc", line_number=1, name="test")
+    func = make_source_block(ctx)
+    result = func(block)
+    assert isinstance(result, expected_type)
+
+
+@pytest.mark.parametrize(
+    "head, tail, text, should_fail",
+    [
+        (0, 0, "a\nb\nc", False),
+        (1, 1, "a\nb\nc", False),
+        (1, 1, "a", True),  # Fails with default 1+1=2 lines required
+        (-1, 0, "a", True),
+        (0, 5, "a\nb", True),
+    ]
+)
+def test_head_tail_validation(head, tail, text, should_fail):
+    ctx = SourceBlockContext(state={}, open_delimiter="[", close_delimiter="]")
+    directive = {"source": "key", "head": head, "tail": tail}
+    block = Block(directive=directive, prefix="", suffix="", text=text, line_number=1, name="test")
+    func = make_source_block(ctx)
+    result = func(block)
+
+    if should_fail:
+        assert isinstance(result, String)
+        assert "key" not in ctx.state
+    else:
+        assert isinstance(result, tuple)
+        assert "key" in ctx.state
+
+
+def test_default_head_tail():
+    ctx = SourceBlockContext(state={}, open_delimiter="[", close_delimiter="]")
+    directive = {"source": "key"}  # Defaults to head=1, tail=1
+    block = Block(directive=directive, prefix="", suffix="", text="line1\nline2\nline3", line_number=1, name="test")
+    func = make_source_block(ctx)
+    func(block)
+    assert ctx.state["key"] == "line2"
+
+
+def test_state_update():
+    ctx = SourceBlockContext(state={}, open_delimiter="[", close_delimiter="]")
+    directive = {"source": "my_key", "head": 1, "tail": 0}
+    block = Block(directive=directive, prefix="", suffix="", text="line1\nline2", line_number=1, name="test")
+    func = make_source_block(ctx)
+    func(block)
+    assert ctx.state["my_key"] == "line2"
+```
 <!-- {==} -->

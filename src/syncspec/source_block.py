@@ -16,8 +16,9 @@ def make_source_block(context: SourceBlockContext):
             return block
 
         key = block.directive["source"]
-        h = block.directive.get("head", 0)
-        t = block.directive.get("tail", 0)  # Spec typo corrected: was directive["head"]
+        # Spec updated: defaults are now 1
+        h = block.directive.get("head", 1)
+        t = block.directive.get("tail", 1)
 
         # Validate head/tail
         if not isinstance(h, int) or h < 0 or not isinstance(t, int) or t < 0:

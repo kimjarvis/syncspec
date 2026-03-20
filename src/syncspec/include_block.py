@@ -34,8 +34,8 @@ def make_include_block(context: IncludeBlockContext):
         if not isinstance(v, str):
             return return_error(f"value for key '{key}' must be a string")
 
-        head = block.directive.get("head", 0)
-        tail = block.directive.get("tail", 0)
+        head = block.directive.get("head", 1)
+        tail = block.directive.get("tail", 1)
 
         if isinstance(head, bool) or not isinstance(head, int) or head < 0:
             return return_error("'head' must be a non-negative integer")

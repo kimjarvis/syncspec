@@ -13,7 +13,7 @@ def format_error(message: str, name: str, line_number: int) -> str:
 
 <!-- {==} -->
 
-<!-- {="import": "src/syncspec/node.py", "head": 2, "tail": 2=} -->
+<!-- {="import": "src/syncspec/node.py", "head": 2, "tail": 2 =} -->
 ```python
 from dataclasses import dataclass
 
@@ -26,7 +26,7 @@ class Node:
 ```
 <!-- {==} -->
 
-<!-- {="import": "src/syncspec/string.py", "head": 2, "tail": 2=} -->
+<!-- {="import": "src/syncspec/string.py", "head": 2, "tail": 2, "eol": true =} -->
 ```python
 from dataclasses import dataclass
 
@@ -38,7 +38,7 @@ class String:
 ```
 <!-- {==} -->
 
-<!-- {="import": "src/syncspec/block.py", "head": 2, "tail": 2=} -->
+<!-- {="import": "src/syncspec/block.py", "head": 2, "tail": 2,  "eol": true =} -->
 ```python
 from dataclasses import dataclass
 from typing import Dict, Any, Optional
@@ -51,11 +51,10 @@ class Block:
     text: str
     line_number: int
     name: str
-
 ```
 <!-- {==} -->
 
-<!-- {="import": "src/syncspec/include_block_context.py", "head": 2, "tail": 2=} -->
+<!-- {="import": "src/syncspec/include_block_context.py", "head": 2, "tail": 2,  "eol": true =} -->
 ```python
 from dataclasses import dataclass, field
 from typing import ClassVar, Dict, Any
@@ -93,18 +92,14 @@ Fetch the string `v` from `IncludeBlockContext.state[key]` where key is the valu
 
 Copy string `block.text` to `u`.
 
-If dictionary `Block.directive` contains a key "head" with an integer value call it head, otherwise set `head=0`.  
+If dictionary `Block.directive` contains a key "head" with an integer value call it head, otherwise set `head=1`.  
 
 Let top be the first head lines of `u`.
 
-If dictionary `Block.directive` contains a key "tail" with an integer value call it tail, otherwise set `tail=0`.
+If dictionary `Block.directive` contains a key "tail" with an integer value call it tail, otherwise set `tail=1`.
 
 Let bottom be the last tail lines of `u`.
 
-Assume that:
-
-- Directive values `Block.directive["head"]=0`  and `Block.directive["tail"]=0` are valid no-ops even when `u` is an empty string.
- 
 Ensure that:
 - `v` is a string.
 - Strings top and bottom do not overlap.  Overlap is defined strictly as `head + tail > total_lines`. 
@@ -169,10 +164,135 @@ In the file `tests/test_include_block.py`.
 
 <!-- {==} -->
 
-<!-- {= "include": "explain_the_solution", "head": 1, "tail": 1 =} -->
+<!-- {= "include": "explain_the_solution" =} -->
 ## Explain the solution  
 
 - Describe any logical inconsistencies in the function specification and suggest improvements. 
 - Describe any assumptions that are not explicitly stated in this function specification.
 
+<!-- {==} -->
+
+<!-- {= "source": "current_implementation" =} -->
+## Current implementation
+
+- Minimise changes to the current implementation.
+
+This is the current implementation:
+
+<!-- {==} -->
+
+<!-- {= "import": "src/syncspec/include_block.py", "head": 2, "tail": 2 =} -->
+```python
+import logging
+from typing import Union, Tuple
+
+from src.syncspec.node import Node
+from src.syncspec.utilities import format_error
+from src.syncspec.string import String
+from src.syncspec.block import Block
+from src.syncspec.include_block_context import IncludeBlockContext
+
+
+def make_include_block(context: IncludeBlockContext):
+    def include_block(block: Block) -> Union[Tuple[String, Node], Block, String]:
+        def return_error(msg: str) -> String:
+            logging.error(format_error(msg, block.name, block.line_number))
+            return String(
+                text=context.open_delimiter + block.prefix + context.close_delimiter +
+                     block.text +
+                     context.open_delimiter + block.suffix + context.close_delimiter,
+                line_number=block.line_number,
+                name=block.name
+            )
+
+        if "include" not in block.directive:
+            return block
+
+        key = block.directive["include"]
+        if not isinstance(key, str):
+            return return_error("'include' directive must be a string")
+
+        if key not in context.state:
+            return return_error(f"include key '{key}' not found in context")
+
+        v = context.state[key]
+        if not isinstance(v, str):
+            return return_error(f"value for key '{key}' must be a string")
+
+        head = block.directive.get("head", 1)
+        tail = block.directive.get("tail", 1)
+
+        if isinstance(head, bool) or not isinstance(head, int) or head < 0:
+            return return_error("'head' must be a non-negative integer")
+        if isinstance(tail, bool) or not isinstance(tail, int) or tail < 0:
+            return return_error("'tail' must be a non-negative integer")
+
+        lines = block.text.splitlines(keepends=True)
+        total_lines = len(lines)
+
+        if head + tail > total_lines:
+            return return_error(f"head ({head}) + tail ({tail}) exceeds total lines ({total_lines})")
+
+        top = "".join(lines[:head])
+        bottom = "".join(lines[-tail:]) if tail > 0 else ""
+
+        s_text = (
+            context.open_delimiter + block.prefix + context.close_delimiter +
+            top + v + bottom +
+            context.open_delimiter + block.suffix + context.close_delimiter
+        )
+
+        s_obj = String(text=s_text, line_number=block.line_number, name=block.name)
+        n_obj = Node(directive_type="include", key=key, line_number=block.line_number, name=block.name)
+
+        return s_obj, n_obj
+
+    return include_block
+```
+<!-- {==} -->
+
+<!-- {= "import": "tests/test_include_block.py", "head": 2, "tail": 2 =} -->
+```python
+import pytest
+from unittest.mock import patch
+from src.syncspec.include_block import make_include_block
+from src.syncspec.block import Block
+from src.syncspec.string import String
+from src.syncspec.node import Node
+from src.syncspec.include_block_context import IncludeBlockContext
+
+@pytest.mark.parametrize("directive,expected_type", [
+    ({}, Block),
+    ({"include": "key1"}, tuple),
+    ({"include": 123}, String),
+    ({"include": "missing"}, String),
+    ({"include": "key1", "head": -1}, String),
+    ({"include": "key1", "head": 10}, String),
+])
+def test_include_block_logic(directive, expected_type):
+    ctx = IncludeBlockContext(state={"key1": "INSERTED"}, open_delimiter="[", close_delimiter="]")
+    block = Block(
+        directive=directive,
+        prefix="p", suffix="s",
+        text="line1\nline2\n",
+        line_number=1, name="test"
+    )
+    func = make_include_block(ctx)
+    result = func(block)
+    assert isinstance(result, expected_type)
+
+def test_include_block_success_content():
+    ctx = IncludeBlockContext(state={"k": "VAL"}, open_delimiter="<", close_delimiter=">")
+    block = Block(
+        directive={"include": "k", "head": 1, "tail": 1},
+        prefix="P", suffix="S",
+        text="A\nB\nC\n",
+        line_number=5, name="src"
+    )
+    func = make_include_block(ctx)
+    res, node = func(block)
+    assert isinstance(res, String) and isinstance(node, Node)
+    assert res.text == "<P>A\nVALC\n<S>"
+    assert node.key == "k"
+```
 <!-- {==} -->

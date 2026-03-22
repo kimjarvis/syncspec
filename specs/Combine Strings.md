@@ -3,7 +3,7 @@
 ## Functional specification
 
 
-<!-- {="import": "src/syncspec/string.py", "head": 2, "tail": 2=} -->
+<!-- {="import": "src/syncspec/parameter_string.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 

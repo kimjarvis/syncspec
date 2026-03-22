@@ -26,7 +26,7 @@ class Node:
 ```
 <!-- {==} -->
 
-<!-- {="import": "src/syncspec/string.py", "head": 2, "tail": 2=} -->
+<!-- {="import": "src/syncspec/parameter_string.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -172,13 +172,13 @@ This is the current implementation:
 <!-- {==} -->
 
 <!-- {= "import": "src/syncspec/source_block.py", "head": 2, "tail": 2 =} -->
-```python
+
 import logging
 from typing import Any, Dict, Tuple, Union
 
 from src.syncspec.node import Node
 from src.syncspec.utilities import format_error
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.block import Block
 from src.syncspec.source_block_context import SourceBlockContext
 
@@ -244,12 +244,12 @@ def _make_error_string(context: SourceBlockContext, block: Block) -> String:
 
 
 <!-- {= "import": "tests/test_source_block.py", "head": 2, "tail": 2 =} -->
-```python
+
 import pytest
 from src.syncspec.source_block import make_source_block
 from src.syncspec.source_block_context import SourceBlockContext
 from src.syncspec.block import Block
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.node import Node
 
 

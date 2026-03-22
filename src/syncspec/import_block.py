@@ -4,7 +4,7 @@ from typing import Union, Tuple, Dict, Any
 
 from src.syncspec.node import Node
 from src.syncspec.utilities import format_error
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.block import Block
 from src.syncspec.import_block_context import ImportBlockContext
 

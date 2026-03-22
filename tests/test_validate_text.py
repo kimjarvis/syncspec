@@ -4,7 +4,7 @@ from src.syncspec.validate_text import make_validate_text
 from src.syncspec.text import Text
 from src.syncspec.validate_text_context import ValidateTextContext
 from src.syncspec.validated_text import ValidatedText
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 
 
 @pytest.mark.parametrize(

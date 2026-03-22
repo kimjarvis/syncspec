@@ -5,7 +5,7 @@ from typing import Union, Dict, Any
 from src.syncspec.utilities import format_error
 from src.syncspec.fragment import Fragment
 from src.syncspec.block import Block
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.create_blocks_context import CreateBlocksContext
 
 

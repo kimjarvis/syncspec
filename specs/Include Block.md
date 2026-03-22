@@ -26,7 +26,7 @@ class Node:
 ```
 <!-- {==} -->
 
-<!-- {="import": "src/syncspec/string.py", "head": 2, "tail": 2, "eol": true =} -->
+<!-- {="import": "src/syncspec/parameter_string.py", "head": 2, "tail": 2, "eol": true =} -->
 ```python
 from dataclasses import dataclass
 
@@ -186,13 +186,13 @@ This is the current implementation:
 <!-- {==} -->
 
 <!-- {= "import": "src/syncspec/include_block.py", "head": 2, "tail": 2 =} -->
-```python
+
 import logging
 from typing import Union, Tuple
 
 from src.syncspec.node import Node
 from src.syncspec.utilities import format_error
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.block import Block
 from src.syncspec.include_block_context import IncludeBlockContext
 
@@ -256,12 +256,12 @@ def make_include_block(context: IncludeBlockContext):
 <!-- {==} -->
 
 <!-- {= "import": "tests/test_include_block.py", "head": 2, "tail": 2 =} -->
-```python
+
 import pytest
 from unittest.mock import patch
 from src.syncspec.include_block import make_include_block
 from src.syncspec.block import Block
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.node import Node
 from src.syncspec.include_block_context import IncludeBlockContext
 

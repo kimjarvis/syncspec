@@ -2,7 +2,7 @@ import pytest
 from src.syncspec.source_block import make_source_block
 from src.syncspec.source_block_context import SourceBlockContext
 from src.syncspec.block import Block
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.node import Node
 
 

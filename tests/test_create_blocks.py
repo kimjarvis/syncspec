@@ -2,7 +2,7 @@ import pytest
 from src.syncspec.create_blocks import make_create_blocks
 from src.syncspec.create_blocks_context import CreateBlocksContext
 from src.syncspec.fragment import Fragment
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.block import Block
 
 

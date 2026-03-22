@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch
 from src.syncspec.include_block import make_include_block
 from src.syncspec.block import Block
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.node import Node
 from src.syncspec.include_block_context import IncludeBlockContext
 

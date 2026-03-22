@@ -1,4 +1,4 @@
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.combine_strings_context import CombineStringsContext
 
 

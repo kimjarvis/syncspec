@@ -3,7 +3,7 @@ from pathlib import Path
 from src.syncspec.import_block import make_import_block
 from src.syncspec.block import Block
 from src.syncspec.import_block_context import ImportBlockContext
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.node import Node
 
 @pytest.mark.parametrize("directive,expected_type", [

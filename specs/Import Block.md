@@ -26,7 +26,7 @@ class Node:
 ```
 <!-- {==} -->
 
-<!-- {="import": "src/syncspec/string.py", "head": 2, "tail": 2=} -->
+<!-- {="import": "src/syncspec/parameter_string.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
@@ -197,14 +197,14 @@ This is the current implementation:
 <!-- {==} -->
 
 <!-- {= "import": "src/syncspec/import_block.py", "head": 2, "tail": 2 =} -->
-```python
+
 import logging
 from pathlib import Path
 from typing import Union, Tuple, Dict, Any
 
 from src.syncspec.node import Node
 from src.syncspec.utilities import format_error
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.block import Block
 from src.syncspec.import_block_context import ImportBlockContext
 
@@ -304,13 +304,13 @@ def _log_and_return_error(message: str, block: Block, context: ImportBlockContex
 This is the current implementation:
 
 <!-- {= "import": "tests/test_import_block.py", "head": 2, "tail": 2 =} -->
-```python
+
 import pytest
 from pathlib import Path
 from src.syncspec.import_block import make_import_block
 from src.syncspec.block import Block
 from src.syncspec.import_block_context import ImportBlockContext
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.node import Node
 
 @pytest.mark.parametrize("directive,expected_type", [

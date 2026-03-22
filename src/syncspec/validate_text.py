@@ -3,7 +3,7 @@ from typing import Union
 
 from src.syncspec.text import Text
 from src.syncspec.validated_text import ValidatedText
-from src.syncspec.string import String
+from src.syncspec.parameter_string import String
 from src.syncspec.utilities import format_error
 from src.syncspec.validate_text_context import ValidateTextContext
 

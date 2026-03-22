@@ -17,4 +17,5 @@ def production(facts, rules):
             else:
                 new_facts.append(fact)
         facts = new_facts
+        print(facts)
     return facts

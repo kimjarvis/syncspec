@@ -48,10 +48,13 @@ In the file `src/syncspec/fragment_text.py`.
 
 Define a closure factory with a unary function with signature:
 
+<!-- {= "source": "signature:fragment_text", "head": 2, "tail": 2 =} -->
 ```python
 def make_fragment_text(context: FragmentTextContext):
     def fragment_text(text: ValidatedText) -> List[Fragment]:
+
 ```
+<!-- {==} -->
 
 - Parse the text using the delimiters and return a list of Fragment objects.
 - Fragments are returned in strict left-to-right order of appearance in the source text.

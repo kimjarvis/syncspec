@@ -74,10 +74,13 @@ In the file `src/syncspec/import_block.py`.
 
 Define a closure factory with a unary function with signature:
 
+<!-- {="source": "signature:import_block", "head": 2, "tail": 2=} -->
 ```python
 def make_import_block(context: ImportBlockContext):	
 	def import_block(block: Block) -> Union[Tuple[String, Node, Node], Block, String]:
+
 ```
+<!-- {==} -->
 
 If dictionary `Block.directive` contains a key "import" then:
 

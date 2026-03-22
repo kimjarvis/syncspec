@@ -86,10 +86,13 @@ In the file `src/syncspec/create_blocks.py`.
 
 Define a closure factory with a unary function with signature:
 
+<!-- {="source": "signature:create_blocks", "head": 2, "tail": 2=} -->
 ```python
 def make_create_blocks(context: CreateBlocksContext):	
 	def create_blocks(fragment: Fragment) -> Union[Block, String, None]:
+
 ```
+<!-- {==} -->
 
 The field `index` acts as a global counter of the number of function calls.  Index is incremented after processing the current state to ensure the modulo check corresponds to the current call count (0-based).
 

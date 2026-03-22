@@ -67,10 +67,13 @@ In the file `src/syncspec/validate_text.py`.
 
 Define a closure factory with a unary function with signature:
 
+<!-- {= "source": "signature:validate_text", "head": 2, "tail": 2 =} -->
 ```python
 def make_validate_text(context: ValidateTextContext):
     def validate_text(text: Text) -> Union[ValidatedText, String]:
+
 ```
+<!-- {==} -->
 ### Verify the context
 
 #### Assume that:

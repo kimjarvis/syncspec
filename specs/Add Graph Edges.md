@@ -1,13 +1,13 @@
-# Graph Edges 
+# Add Graph Edges 
 
 ## Functional specification
 
-<!-- {="import": "src/syncspec/edge.py", "head": 2, "tail": 2=} -->
+<!-- {="import": "src/syncspec/graph_node.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
 @dataclass
-class Edge:
+class GraphNode:
     directive_type: str
     key: str
     line_number: int
@@ -16,14 +16,14 @@ class Edge:
 ```
 <!-- {==} -->
 
-<!-- {="import": "src/syncspec/graph_edges_context.py", "head": 2, "tail": 2=} -->
+<!-- {="import": "src/syncspec/add_graph_edges_context.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass, field
 from typing import Any, Dict
 import networkx as nx
 
 @dataclass
-class GraphEdgesContext:
+class AddGraphEdgesContext:
 	G: nx.DiGraph
 ```
 <!-- {==} -->
@@ -31,33 +31,40 @@ class GraphEdgesContext:
 Do not generate code to initialise the context.
 ### Implement the unary function Graph Edges
 
-In the file `src/syncspec/graph_edges.py`.
+In the file `src/syncspec/add_graph_edges.py`.
 
 Define a closure factory with a unary function with signature:
 
-<!-- {="source": "signature:graph_edges", "head": 2, "tail": 2=} -->
+<!-- {="source": "signature:add_graph_edges", "head": 2, "tail": 2=} -->
 ```python
-def make_graph_edges(context: GraphEdgesContext):	
-	def graph_edges(edge: Edge) -> None
+def make_add_graph_edges(context: AddGraphEdgesContext):	
+	def add_graph_edges(node: GraphNode) -> None
 
 ```
 <!-- {==} -->
 
 Add edges to the graph G.
 
+Iterate through all nodes, for each node:
+
+Let the node name be `from_node`.
+
 If the node has attribute `directive_type` equal to "include":
-- Let key be the attribute `key`.
-- Search the graph for nodes with attribute `directive_type` equal to "source" and matching attribute `key`.
-- Create a directed edges from nodes with type "source" to nodes with type "include".
+- Let `key` be the attribute `key`.
+- Search the graph for nodes with attribute `directive_type` equal to "source" and matching attribute `key`.   For each matching node:
+	- Let the name of the matching node be `to_node` .
+	- Create a directed edge from the `from_node` to the `to_node`.
 
 If the node has attribute `directive_type` equal to "import":
-- Let key be the attribute `key`.
-- Search the graph for nodes with attribute `directive_type` equal to "export" and matching attribute `key`.
-- Create a directed edges from nodes with type "export" to nodes with type "import".
+- Let `key` be the attribute `key`.
+- Search the graph for all nodes with attribute `directive_type` equal to "export" and matching attribute `key`.  For each matching node:
+	- Let the name of the matching node be `to_node` .
+	- Create a directed edge from the `from_node` to the `to_node`.
+
 ###  Note that
 
-- Nodes have attributes `directive_type`, `name`, `line_number`, `key`.
-- The node names are constructed from their attributes `directive_type + "_" + name + "_" + line_number`.
+- Nodes have attributes `directive_type`, `file_name`, `line_number`, `key`.
+- The node names are constructed from their attributes `directive_type + "_" + file_name + "_" + line_number`.
 - The graph already contain all relevant nodes.
 - The function adds only edges to the graph.
 - Snapshot nodes to avoid Runtime Errors during graph mutation.  Iterate with data to access attributes directly using:
@@ -83,7 +90,7 @@ If the node has attribute `directive_type` equal to "import":
 <!-- {==} -->
 ## Test the unary function  
 
-In the file `tests/test_graph_edges.py`.
+In the file `tests/test_add_graph_edges.py`.
 
 <!-- {= "include": "generate_tests", "head": 1, "tail": 1 =} -->
 

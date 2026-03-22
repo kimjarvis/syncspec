@@ -34,10 +34,13 @@ In the file `src/syncspec/combine_strings.py`.
 
 Define a closure factory with a unary function with signature:
 
+<!-- {="source": "signature:combine_strings", "head": 2, "tail": 2=} -->
 ```python
 def make_combine_strings(context: CombineStringsContext):	
 	def combine_strings(string: String) -> None
+
 ```
+<!-- {==} -->
 
  - Append `String.text` to the end of string `CombineStringsContext.text`.
 

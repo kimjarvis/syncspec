@@ -74,10 +74,13 @@ In the file `src/syncspec/source_block.py`.
 
 Define a closure factory with a unary function with signature:
 
+<!-- {="source": "signature:source_block", "head": 2, "tail": 2=} -->
 ```python
 def make_source_block(context: SourceBlockContext):	
 	def source_block(block: Block) -> Union[Tuple[String, Node], Block, String]:
+
 ```
+<!-- {==} -->
 
 If dictionary `Block.directive` contains a key "source" then:
 

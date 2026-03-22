@@ -43,38 +43,68 @@ class SyncspecTextContext:
 Do not generate code to initialise the context.
 
 Verify context in function `make_syncspec_text`:
-- `open_delimiter` and `close_delimiter` are not empty strings.
-- `graph` is a valid `nx.DiGraph` object.
-- `monad` is a valid dictionary.
+- `open_delimiter` and `close_delimiter` are not empty strings.  Otherwise, raise a value error with message.
+- `graph` is a valid `nx.DiGraph` object.  Otherwise, raise a type error.
+- `monad` is a valid dictionary.  Otherwise, raise a type error.
+
 ### ### Implement a unary function
 
 In the file `src/syncspec/syncspec_text.py`.
 
 Define a closure factory with a unary function with signature:
 
+<!-- {="source": "signature:syncspec_text", "head": 2, "tail": 2=} -->
 ```python
 def make_syncspec_text(context: SyncspecTextContext):
 	def syncspec_text(text: Text) -> File
-```
 
-Set `validate_text` to the value of `make_validate_text` passing this an object of this type as the argument:
 ```
+<!-- {==} -->
+
+Initialise each imported closure factory with context.
+### [[Validate Text]]  
+
+<!-- {= "include": "signature:validate_text", "head": 2, "tail": 2 =} -->
+```python
+def make_validate_text(context: ValidateTextContext):
+    def validate_text(text: Text) -> Union[ValidatedText, String]:
+```
+<!-- {==} -->
+
+```python
 ValidateTextContext(
         open_delimiter=context.open_delimiter,
         close_delimiter=context.close_delimiter,
         line_number=1
 )
 ```
+### [[Fragment Text]]
 
-Modify this code to implement the function:
+<!-- {= "include": "signature:fragment_text", "head": 2, "tail": 2 =} -->
+```python
+def make_fragment_text(context: FragmentTextContext):
+    def fragment_text(text: ValidatedText) -> List[Fragment]:
+```
+<!-- {==} -->
 
 ```python
-    ftc = FragmentTextContext(
+FragmentTextContext(
         open_delimiter=context.open_delimiter,
         close_delimiter=context.close_delimiter,
         line_number=1
     )
-    cbc = CreateBlocksContext(
+```
+### [[Create Blocks]]
+
+<!-- {= "include": "signature:create_blocks", "head": 2, "tail": 2 =} -->
+```python
+def make_create_blocks(context: CreateBlocksContext):	
+	def create_blocks(fragment: Fragment) -> Union[Block, String, None]:
+```
+<!-- {==} -->
+
+```
+CreateBlocksContext(
         index=0,
         prefix="",
         prefix_line_number=1,
@@ -84,61 +114,113 @@ Modify this code to implement the function:
         open_delimiter=context.open_delimiter,
         close_delimiter=context.close_delimiter,
     )
-    sbc = SourceBlockContext(
+```
+
+### [[Source Block]]
+
+<!-- {= "include": "signature:source_block", "head": 2, "tail": 2 =} -->
+```python
+def make_source_block(context: SourceBlockContext):	
+	def source_block(block: Block) -> Union[Tuple[String, Node], Block, String]:
+```
+<!-- {==} -->
+
+```python
+SourceBlockContext(
         state=context.monad,
         open_delimiter=context.open_delimiter,
         close_delimiter=context.close_delimiter,
     )
-    imbc = ImportBlockContext(
+```
+### [[Include Block]]
+
+<!-- {= "include": "signature:include_block", "head": 2, "tail": 2 =} -->
+```python
+def make_include_block(context: IncludeBlockContext):	
+	def include_block(block: Block) -> Union[Tuple[String, Node], Block, String]:
+```
+<!-- {==} -->
+
+```python
+IncludeBlockContext(
+        state=context.monad,
+        open_delimiter=context.open_delimiter,
+        close_delimiter=context.close_delimiter,
+    )
+```
+### [[Import Block]]
+
+<!-- {= "include": "signature:import_block", "head": 2, "tail": 2 =} -->
+```python
+def make_import_block(context: ImportBlockContext):	
+	def import_block(block: Block) -> Union[Tuple[String, Node, Node], Block, String]:
+```
+<!-- {==} -->
+
+```python
+ImportBlockContext(
         import_path=context.import_path,
         open_delimiter=context.open_delimiter,
         close_delimiter=context.close_delimiter,
     )
-    ibc = IncludeBlockContext(
-        state=context.monad,
-        open_delimiter=context.open_delimiter,
-        close_delimiter=context.close_delimiter,
-    )
-    csc = CombineStringsContext(
-        text="",
-    )
-    cnc = CombineNodesContext(
-        G=context.graph,
-    )
-    gec = GraphEdgesContext(
-        G=context.graph,
-    )
+```
+### [[Combine Strings]]
 
-    fragment_text = make_fragment_text(ftc)
-    create_blocks = make_create_blocks(cbc)
-    source_block = make_source_block(sbc)
-    import_block = make_import_block(imbc)
-    include_block = make_include_block(ibc)
-    combine_strings = make_combine_strings(csc)
-    combine_nodes = make_combine_nodes(cnc)
-    graph_edges = make_graph_edges(gec)
+<!-- {= "include": "signature:combine_strings", "head": 2, "tail": 2 =} -->
+```python
+def make_combine_strings(context: CombineStringsContext):	
+	def combine_strings(string: String) -> None
+```
+<!-- {==} -->
 
-    facts = [Text(name="freddy", text="""line 1
-    {{"source": "a"}}A{{}}
-    {{"source": "b"}}B{{}}
-    line 2
-    {{"include": "a"}}{{}} 
-    {{"include": "b"}}{{}}
-    line 3"""),
-    ]
+```python
+CombineStringsContext(text="")
+```
+### [[Add Graph Nodes]]
+
+<!-- {= "include": "signature:add_graph_nodes", "head": 2, "tail": 2 =} -->
+```python
+def make_add_graph_nodes(context: AddGraphNodesContext):	
+	def add_graph_nodes(node: Node) -> GraphNode
+```
+<!-- {==} -->
+
+```python
+AddGraphNodesContext(G=context.graph)
+```
+### [[Add Graph Edges]]
+
+<!-- {= "include": "signature:add_graph_edges", "head": 2, "tail": 2 =} -->
+```python
+def make_add_graph_edges(context: GraphEdgesContext):	
+	def add_graph_edges(node: GraphNode) -> None
+```
+<!-- {==} -->
+
+```python
+AddGraphEdgesContext(G=context.graph)
 ```
 
-Achieve this by appending each function, such as validate_text, to the list after creation, running build_rules and then passing the rules to `production`.
-```
+- Append each function, such as validate_text, to the list after creation.
+- Construct the `build_rules`.
+- Pass the rules to `production`.
+
+```python
     rules = build_rules(
-        [validate_text, fragment_text, create_blocks, source_block, import_block, include_block, combine_strings, 
-         combine_nodes, graph_edges])
-
+        [validate_text, 
+        fragment_text, 
+        create_blocks, 
+        source_block, 
+        import_block, 
+        include_block, 
+        combine_strings, 
+        add_graph_nodes, 
+        add_graph_edges])
 	production(facts, rules)
 ```
 
 - The contexts shall be initialised with values from `SyncspecTextContext`.  
-- Context objects (csc, sbc, ibc, etc.) are instantiated once in the factory.  Subsequent calls to `syncspec_text` will carry over state.
+- Context objects are instantiated once in the factory.  Subsequent calls to `syncspec_text` will carry over state.
 - Do not modify magic numbers, such as `index=0`.
 - The parameter text shall replace the creation Text object, used to set facts.
 - Return an object of type `File`, use the final value of `CombineStringsContext.text` and the parameter value `text.name`.
@@ -147,6 +229,8 @@ Achieve this by appending each function, such as validate_text, to the list afte
 ## Package
 
 `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
+
+All referenced modules (e.g., validate_text, fragment_text) exist in `src.syncspec` and export the specified factories and context classes.
 ## Test the unary function  
 
 In the file `tests/test_syncspec_text.py`.
@@ -166,7 +250,19 @@ Initialise the context suggestion:
 	import_path="."
 ```
 
-Call the function with the Text object, with name "freddy", from the example.
+Call the function with the Text object, with name "freddy", from this example.
+
+```python
+    facts = [Text(name="freddy", text="""line 1
+    {{"source": "a"}}A{{}}
+    {{"source": "b"}}B{{}}
+    line 2
+    {{"include": "a"}}{{}} 
+    {{"include": "b"}}{{}}
+    line 3"""),
+    ]	
+```
+
 Attach the `CombineStringsContext` to the context instance to allow access without modifying the dataclass definition.  
 Assert that the `CombineStringsContext` object matches this pretty printed example.
 
@@ -183,36 +279,26 @@ CombineStringsContext(text='line 1\n'
 
 `src/syncspec` is a Python package.   Imports take the form `from src.syncspec.x import X`.
 
-Use the following imports:
+Follow this pattern to import closure factories and contexts.
+
+```python
+from src.syncspec.combine_strings import make_combine_strings
+from src.syncspec.combine_strings_context import CombineStringsContext
+```
+
+Additionally, use the following imports:
 
 ```python
 import pprint
 
 import networkx as nx
 
-from src.syncspec.graph_edges import make_graph_edges
-from src.syncspec.graph_edges_context import GraphEdgesContext
-from src.syncspec.combine_nodes import make_combine_nodes
-from src.syncspec.combine_nodes_context import CombineNodesContext
-from src.syncspec.combine_strings import make_combine_strings
-from src.syncspec.combine_strings_context import CombineStringsContext
-from src.syncspec.create_blocks import make_create_blocks
-from src.syncspec.create_blocks_context import CreateBlocksContext
-from src.syncspec.fragment_text import make_fragment_text
-from src.syncspec.fragment_text_context import FragmentTextContext
-from src.syncspec.include_block import make_include_block
-from src.syncspec.include_block_context import IncludeBlockContext
 from src.syncspec.production import build_rules, production
-from src.syncspec.source_block import make_source_block
-from src.syncspec.source_block_context import SourceBlockContext
 from src.syncspec.text import Text
-from src.syncspec.validate_text import make_validate_text
-from src.syncspec.validate_text_context import ValidateTextContext
-from src.syncspec.import_block import make_import_block
-from src.syncspec.import_block_context import ImportBlockContext
 ```
 
-<!-- {= "include": "explain_the_solution", "head": 1, "tail": 1 =} -->
+
+!-- {= "include": "explain_the_solution", "head": 1, "tail": 1 =} -->
 ## Explain the solution  
 
 - Describe any logical inconsistencies in the function specification and suggest improvements. 

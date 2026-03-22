@@ -74,10 +74,13 @@ In the file `src/syncspec/include_block.py`.
 
 Define a closure factory with a unary function with signature:
 
+<!-- {="source": "signature:include_block", "head": 2, "tail": 2=} -->
 ```python
 def make_include_block(context: IncludeBlockContext):	
 	def include_block(block: Block) -> Union[Tuple[String, Node], Block, String]:
+
 ```
+<!-- {==} -->
 
 Check that the value of `block.directive["include"]` is a string.
 
@@ -116,10 +119,11 @@ Return a tuple containing object of type String:
 3. `IncludeBlockContext.close_delimiter`
 4. `top`, the first h lines of `block.text`
 5. The value of `IncludeBlockContext.state[key]`
-6. `bottom` the last t lines of `block.text`
-7. `IncludeBlockContext.open_delimiter`
-8. `block.suffix`
-9. `IncludeBlockContext.close_delimiter`
+6. Add a new line character `\n` unless `Block.directive["eol"]=False` 
+7. `bottom` the last t lines of `block.text`
+8. `IncludeBlockContext.open_delimiter`
+9. `block.suffix`
+10. `IncludeBlockContext.close_delimiter`
 
 The tuple shall also contain an object of type Node:
 - Copy `line_number` from Block.

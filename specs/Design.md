@@ -86,7 +86,7 @@ Add edges to make a graph.
 
 <!-- {= "include": "signature:add_graph_edges", "head": 2, "tail": 2 =} -->
 ```python
-def make_add_graph_edges(context: GraphEdgesContext):	
+def make_add_graph_edges(context: AddGraphEdgesContext):	
 	def add_graph_edges(node: GraphNode) -> None
 ```
 <!-- {==} -->

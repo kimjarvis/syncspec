@@ -188,18 +188,6 @@ def make_add_graph_nodes(context: AddGraphNodesContext):
 ```python
 AddGraphNodesContext(G=context.graph)
 ```
-### [[Add Graph Edges]]
-
-<!-- {= "include": "signature:add_graph_edges", "head": 2, "tail": 2 =} -->
-```python
-def make_add_graph_edges(context: GraphEdgesContext):	
-	def add_graph_edges(node: GraphNode) -> None
-```
-<!-- {==} -->
-
-```python
-AddGraphEdgesContext(G=context.graph)
-```
 
 - Append each function, such as validate_text, to the list after creation.
 - Construct the `build_rules`.
@@ -215,7 +203,7 @@ AddGraphEdgesContext(G=context.graph)
         include_block, 
         combine_strings, 
         add_graph_nodes, 
-        add_graph_edges])
+        ])
 	production(facts, rules)
 ```
 

@@ -36,7 +36,8 @@ def parse_dot_file(path):
     for edge in pd.get_edges():
         src = _clean(edge.get_source())
         dst = _clean(edge.get_destination())
-        G.add_edge(src, dst)
+        attrs = {k: _clean(v) for k, v in edge.get_attributes().items()}
+        G.add_edge(src, dst, **attrs)
 
     return G
 

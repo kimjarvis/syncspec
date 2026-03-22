@@ -78,7 +78,7 @@ def test_node_decoration(tmp_path):
     content = p.read_text()
     assert 'fillcolor=lightblue' in content
     assert 'shape=circle' in content
-    assert 'label="5"' in content
+    assert 'label=5' in content
 
 @pytest.mark.parametrize("dtype, expected_color", [
     ("export", "lightblue"),

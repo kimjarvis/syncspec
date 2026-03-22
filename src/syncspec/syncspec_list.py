@@ -2,7 +2,7 @@ from typing import List, Tuple, Any, Dict
 import networkx as nx
 
 from src.syncspec.text import Text
-from src.syncspec.file import File
+from src.syncspec.parameter_file import File
 from src.syncspec.syncspec_text_context import SyncspecTextContext
 from src.syncspec.syncspec_list_context import SyncspecListContext
 from src.syncspec.syncspec_text import make_syncspec_text

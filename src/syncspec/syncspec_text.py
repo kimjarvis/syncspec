@@ -3,7 +3,7 @@ import networkx as nx
 
 from src.syncspec.syncspec_text_context import SyncspecTextContext
 from src.syncspec.text import Text
-from src.syncspec.file import File
+from src.syncspec.parameter_file import File
 from src.syncspec.production import build_rules, production
 
 from src.syncspec.validate_text import make_validate_text

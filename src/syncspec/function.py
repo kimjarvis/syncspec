@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional, Dict, Tuple
 
 from src.syncspec.text import Text
-from src.syncspec.file import File
+from src.syncspec.parameter_file import File
 from src.syncspec.syncspec_list_context import SyncspecListContext
 from src.syncspec.syncspec_list import make_syncspec_list
 

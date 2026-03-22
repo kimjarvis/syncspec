@@ -2,15 +2,7 @@ import pytest
 import importlib.util
 import os
 
-def load_module():
-    spec = importlib.util.spec_from_file_location("syncspec_graph", "src/syncspec/syncspec-graph.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-syncspec = load_module()
-process_graph = syncspec.process_graph
-parse_dot_file = syncspec.parse_dot_file
+from src.syncspec.syncspec_graph import process_graph, parse_dot_file
 
 def _wrap(content):
     return f"strict digraph {{ {content} }}"

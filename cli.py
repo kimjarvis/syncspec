@@ -9,7 +9,7 @@ from typing import List, Dict, Any
 import networkx as nx
 
 from src.syncspec.text import Text
-from src.syncspec.file import File
+from src.syncspec.parameter_file import File
 from src.syncspec.syncspec_list_context import SyncspecListContext
 from src.syncspec.syncspec_list import make_syncspec_list
 

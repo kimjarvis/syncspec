@@ -3,7 +3,7 @@ from unittest.mock import patch
 from src.syncspec.include_block import make_include_block
 from src.syncspec.block import Block
 from src.syncspec.parameter_string import String
-from src.syncspec.node import Node
+from src.syncspec.add_graph_nodes_parameter import AddGraphNodesParameter
 from src.syncspec.include_block_context import IncludeBlockContext
 
 @pytest.mark.parametrize("directive,expected_type", [
@@ -36,6 +36,6 @@ def test_include_block_success_content():
     )
     func = make_include_block(ctx)
     res, node = func(block)
-    assert isinstance(res, String) and isinstance(node, Node)
+    assert isinstance(res, String) and isinstance(node, AddGraphNodesParameter)
     assert res.text == "<P>A\nVALC\n<S>"
     assert node.key == "k"

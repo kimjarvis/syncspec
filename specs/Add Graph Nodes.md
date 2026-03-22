@@ -2,30 +2,16 @@
 
 ## Functional specification
 
-<!-- {="import": "src/syncspec/node.py", "head": 2, "tail": 2=} -->
+<!-- {="import": "src/syncspec/add_graph_nodes_parameter.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
 @dataclass
-class Node:
+class AddGraphNodesParameter:
     directive_type: str
     key: str
     line_number: int
     name: str
-```
-<!-- {==} -->
-
-<!-- {= "import": "src/syncspec/graph_node.py", "head": 2, "tail": 2 =} -->
-```python
-from dataclasses import dataclass
-
-@dataclass
-class GraphNode:
-    directive_type: str
-    key: str
-    line_number: int
-    name: str
-
 ```
 <!-- {==} -->
 
@@ -51,7 +37,7 @@ Define a closure factory with a unary function with signature:
 <!-- {= "source": "signature:add_graph_nodes", "head": 2, "tail": 2 =} -->
 ```python
 def make_add_graph_nodes(context: AddGraphNodesContext):	
-	def add_graph_nodes(node: Node) -> GraphNode
+	def add_graph_nodes(node: AddGraphNodesParameter) -> None
 
 ```
 <!-- {==} -->
@@ -62,8 +48,6 @@ Add a new node to the graph G in the context.
 - Add an attribute `key` with value `node.key`
 - Add an attribute `line_number` with value `node.line_number`
 - Add an attribute `file_name` with value `node.name`.
-
-Return an object of type `GraphNode`.  Initialise the object with fields from `node`.
 ### Note that
 
 - The function adds only nodes to the graph.

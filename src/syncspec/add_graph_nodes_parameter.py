@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 @dataclass
-class GraphNode:
+class AddGraphNodesParameter:
     directive_type: str
     key: str
     line_number: int

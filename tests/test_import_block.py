@@ -4,7 +4,7 @@ from src.syncspec.import_block import make_import_block
 from src.syncspec.block import Block
 from src.syncspec.import_block_context import ImportBlockContext
 from src.syncspec.parameter_string import String
-from src.syncspec.node import Node
+from src.syncspec.add_graph_nodes_parameter import AddGraphNodesParameter
 
 @pytest.mark.parametrize("directive,expected_type", [
     ({}, Block),
@@ -98,8 +98,8 @@ def test_return_structure(tmp_path):
     assert len(result) == 3
     s, n_export, n_import = result
     assert isinstance(s, String)
-    assert isinstance(n_export, Node)
-    assert isinstance(n_import, Node)
+    assert isinstance(n_export, AddGraphNodesParameter)
+    assert isinstance(n_import, AddGraphNodesParameter)
     assert n_export.directive_type == "export"
     assert n_import.directive_type == "import"
     assert n_import.line_number == 10

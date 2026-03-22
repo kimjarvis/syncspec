@@ -1,36 +1,25 @@
-import pytest
 import networkx as nx
-from src.syncspec.add_graph_nodes import make_add_graph_nodes
+import pytest
 from src.syncspec.add_graph_nodes_context import AddGraphNodesContext
-from src.syncspec.node import Node
-from src.syncspec.graph_node import GraphNode
+from src.syncspec.add_graph_nodes_parameter import AddGraphNodesParameter
+from src.syncspec.add_graph_nodes import make_add_graph_nodes
 
 
-@pytest.mark.parametrize(
-    "dtype,key,line,name",
-    [
-        ("import", "sys", 1, "main.py"),
-        ("class", "MyClass", 10, "utils.py"),
-    ],
-)
-def test_add_graph_nodes(dtype, key, line, name):
-    G = nx.DiGraph()
-    context = AddGraphNodesContext(G=G)
-    add_fn = make_add_graph_nodes(context)
-    node = Node(directive_type=dtype, key=key, line_number=line, name=name)
+@pytest.mark.parametrize("directive_type,key,line_number,name", [
+    ("import", "sys", 1, "main.py"),
+    ("class", "MyClass", 10, "module.py"),
+])
+def test_add_graph_nodes(directive_type, key, line_number, name):
+    context = AddGraphNodesContext(G=nx.DiGraph())
+    add_func = make_add_graph_nodes(context)
+    param = AddGraphNodesParameter(directive_type, key, line_number, name)
 
-    result = add_fn(node)
-    node_id = f"{dtype}_{name}_{line}"
+    add_func(param)
 
-    assert isinstance(result, GraphNode)
-    assert result.directive_type == dtype
-    assert result.key == key
-    assert result.line_number == line
-    assert result.name == name
-    assert G.has_node(node_id)
-
-    attrs = G.nodes[node_id]
-    assert attrs["directive_type"] == dtype
+    node_id = f"{directive_type}_{name}_{line_number}"
+    assert node_id in context.G
+    attrs = context.G.nodes[node_id]
+    assert attrs["directive_type"] == directive_type
     assert attrs["key"] == key
-    assert attrs["line_number"] == line
+    assert attrs["line_number"] == line_number
     assert attrs["file_name"] == name

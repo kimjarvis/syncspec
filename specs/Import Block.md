@@ -13,12 +13,12 @@ def format_error(message: str, name: str, line_number: int) -> str:
 
 <!-- {==} -->
 
-<!-- {="import": "src/syncspec/node.py", "head": 2, "tail": 2=} -->
+<!-- {="import": "src/syncspec/add_graph_nodes_parameter.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
 @dataclass
-class Node:
+class AddGraphNodesParameter:
     directive_type: str
     key: str
     line_number: int
@@ -202,7 +202,7 @@ import logging
 from pathlib import Path
 from typing import Union, Tuple, Dict, Any
 
-from src.syncspec.node import Node
+from src.syncspec.add_graph_nodes_parameter import AddGraphNodesParameter
 from src.syncspec.utilities import format_error
 from src.syncspec.parameter_string import String
 from src.syncspec.block import Block
@@ -210,7 +210,7 @@ from src.syncspec.import_block_context import ImportBlockContext
 
 
 def make_import_block(context: ImportBlockContext):
-    def import_block(block: Block) -> Union[Tuple[String, Node, Node], Block, String]:
+    def import_block(block: Block) -> Union[Tuple[String, AddGraphNodesParameter, AddGraphNodesParameter], Block, String]:
         if "import" not in block.directive:
             return block
 
@@ -278,8 +278,8 @@ def make_import_block(context: ImportBlockContext):
         res_string = String(text=s_text, line_number=block.line_number, name=block.name)
 
         # Construct Nodes
-        n_export = Node(directive_type="export", key=import_path, line_number=0, name=import_path)
-        n_import = Node(directive_type="import", key=import_path, line_number=block.line_number, name=block.name)
+        n_export = AddGraphNodesParameter(directive_type="export", key=import_path, line_number=0, name=import_path)
+        n_import = AddGraphNodesParameter(directive_type="import", key=import_path, line_number=block.line_number, name=block.name)
 
         return (res_string, n_export, n_import)
 
@@ -311,7 +311,7 @@ from src.syncspec.import_block import make_import_block
 from src.syncspec.block import Block
 from src.syncspec.import_block_context import ImportBlockContext
 from src.syncspec.parameter_string import String
-from src.syncspec.node import Node
+from src.syncspec.add_graph_nodes_parameter import AddGraphNodesParameter
 
 @pytest.mark.parametrize("directive,expected_type", [
     ({}, Block),
@@ -405,8 +405,8 @@ def test_return_structure(tmp_path):
     assert len(result) == 3
     s, n_export, n_import = result
     assert isinstance(s, String)
-    assert isinstance(n_export, Node)
-    assert isinstance(n_import, Node)
+    assert isinstance(n_export, AddGraphNodesParameter)
+    assert isinstance(n_import, AddGraphNodesParameter)
     assert n_export.directive_type == "export"
     assert n_import.directive_type == "import"
     assert n_import.line_number == 10

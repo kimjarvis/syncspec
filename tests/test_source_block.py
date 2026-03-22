@@ -3,7 +3,7 @@ from src.syncspec.source_block import make_source_block
 from src.syncspec.source_block_context import SourceBlockContext
 from src.syncspec.block import Block
 from src.syncspec.parameter_string import String
-from src.syncspec.node import Node
+from src.syncspec.add_graph_nodes_parameter import AddGraphNodesParameter
 
 
 @pytest.mark.parametrize(

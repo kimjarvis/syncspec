@@ -13,12 +13,12 @@ def format_error(message: str, name: str, line_number: int) -> str:
 
 <!-- {==} -->
 
-<!-- {="import": "src/syncspec/node.py", "head": 2, "tail": 2 =} -->
+<!-- {="import": "src/syncspec/add_graph_nodes_parameter.py", "head": 2, "tail": 2 =} -->
 ```python
 from dataclasses import dataclass
 
 @dataclass
-class Node:
+class AddGraphNodesParameter:
     directive_type: str
     key: str
     line_number: int
@@ -190,7 +190,7 @@ This is the current implementation:
 import logging
 from typing import Union, Tuple
 
-from src.syncspec.node import Node
+from src.syncspec.add_graph_nodes_parameter import AddGraphNodesParameter
 from src.syncspec.utilities import format_error
 from src.syncspec.parameter_string import String
 from src.syncspec.block import Block
@@ -198,7 +198,7 @@ from src.syncspec.include_block_context import IncludeBlockContext
 
 
 def make_include_block(context: IncludeBlockContext):
-    def include_block(block: Block) -> Union[Tuple[String, Node], Block, String]:
+    def include_block(block: Block) -> Union[Tuple[String, AddGraphNodesParameter], Block, String]:
         def return_error(msg: str) -> String:
             logging.error(format_error(msg, block.name, block.line_number))
             return String(
@@ -247,7 +247,7 @@ def make_include_block(context: IncludeBlockContext):
         )
 
         s_obj = String(text=s_text, line_number=block.line_number, name=block.name)
-        n_obj = Node(directive_type="include", key=key, line_number=block.line_number, name=block.name)
+        n_obj = AddGraphNodesParameter(directive_type="include", key=key, line_number=block.line_number, name=block.name)
 
         return s_obj, n_obj
 
@@ -262,7 +262,7 @@ from unittest.mock import patch
 from src.syncspec.include_block import make_include_block
 from src.syncspec.block import Block
 from src.syncspec.parameter_string import String
-from src.syncspec.node import Node
+from src.syncspec.add_graph_nodes_parameter import AddGraphNodesParameter
 from src.syncspec.include_block_context import IncludeBlockContext
 
 @pytest.mark.parametrize("directive,expected_type", [
@@ -295,7 +295,7 @@ def test_include_block_success_content():
     )
     func = make_include_block(ctx)
     res, node = func(block)
-    assert isinstance(res, String) and isinstance(node, Node)
+    assert isinstance(res, String) and isinstance(node, AddGraphNodesParameter)
     assert res.text == "<P>A\nVALC\n<S>"
     assert node.key == "k"
 ```

@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import Union, Tuple, Dict, Any
 
-from src.syncspec.node import Node
+from src.syncspec.add_graph_nodes_parameter import AddGraphNodesParameter
 from src.syncspec.utilities import format_error
 from src.syncspec.parameter_string import String
 from src.syncspec.block import Block
@@ -10,7 +10,7 @@ from src.syncspec.import_block_context import ImportBlockContext
 
 
 def make_import_block(context: ImportBlockContext):
-    def import_block(block: Block) -> Union[Tuple[String, Node, Node], Block, String]:
+    def import_block(block: Block) -> Union[Tuple[String, AddGraphNodesParameter, AddGraphNodesParameter], Block, String]:
         if "import" not in block.directive:
             return block
 
@@ -78,8 +78,8 @@ def make_import_block(context: ImportBlockContext):
         res_string = String(text=s_text, line_number=block.line_number, name=block.name)
 
         # Construct Nodes
-        n_export = Node(directive_type="export", key=import_path, line_number=0, name=import_path)
-        n_import = Node(directive_type="import", key=import_path, line_number=block.line_number, name=block.name)
+        n_export = AddGraphNodesParameter(directive_type="export", key=import_path, line_number=0, name=import_path)
+        n_import = AddGraphNodesParameter(directive_type="import", key=import_path, line_number=block.line_number, name=block.name)
 
         return (res_string, n_export, n_import)
 

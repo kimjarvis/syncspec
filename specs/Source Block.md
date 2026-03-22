@@ -13,12 +13,12 @@ def format_error(message: str, name: str, line_number: int) -> str:
 
 <!-- {==} -->
 
-<!-- {="import": "src/syncspec/node.py", "head": 2, "tail": 2=} -->
+<!-- {="import": "src/syncspec/add_graph_nodes_parameter.py", "head": 2, "tail": 2=} -->
 ```python
 from dataclasses import dataclass
 
 @dataclass
-class Node:
+class AddGraphNodesParameter:
     directive_type: str
     key: str
     line_number: int
@@ -176,7 +176,7 @@ This is the current implementation:
 import logging
 from typing import Any, Dict, Tuple, Union
 
-from src.syncspec.node import Node
+from src.syncspec.add_graph_nodes_parameter import AddGraphNodesParameter
 from src.syncspec.utilities import format_error
 from src.syncspec.parameter_string import String
 from src.syncspec.block import Block
@@ -186,7 +186,7 @@ logger = logging.getLogger(__name__)
 
 
 def make_source_block(context: SourceBlockContext):
-    def source_block(block: Block) -> Union[Tuple[String, Node], Block, String]:
+    def source_block(block: Block) -> Union[Tuple[String, AddGraphNodesParameter], Block, String]:
         if "source" not in block.directive:
             return block
 
@@ -213,7 +213,7 @@ def make_source_block(context: SourceBlockContext):
 
         # Construct return objects
         string_obj = _make_decorated_string(context, block)
-        node_obj = Node(
+        node_obj = AddGraphNodesParameter(
             directive_type="source",
             key=key,
             line_number=block.line_number,
@@ -250,7 +250,7 @@ from src.syncspec.source_block import make_source_block
 from src.syncspec.source_block_context import SourceBlockContext
 from src.syncspec.block import Block
 from src.syncspec.parameter_string import String
-from src.syncspec.node import Node
+from src.syncspec.add_graph_nodes_parameter import AddGraphNodesParameter
 
 
 @pytest.mark.parametrize(

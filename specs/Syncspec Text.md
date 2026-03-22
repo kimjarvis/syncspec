@@ -181,7 +181,7 @@ CombineStringsContext(text="")
 <!-- {= "include": "signature:add_graph_nodes", "head": 2, "tail": 2 =} -->
 ```python
 def make_add_graph_nodes(context: AddGraphNodesContext):	
-	def add_graph_nodes(node: Node) -> GraphNode
+	def add_graph_nodes(node: AddGraphNodesParameter) -> None
 ```
 <!-- {==} -->
 

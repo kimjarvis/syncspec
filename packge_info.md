@@ -1,0 +1,3 @@
+- The function is part of the python package `src/syncspec` .   
+- Imports from the package take the form `from syncspec.x import X`.
+- Assume Python version 3.9.

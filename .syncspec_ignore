@@ -1,0 +1,9 @@
+# Ignore Python cache and virtual environment
+__pycache__/
+.venv/
+.git/
+.pytest_cache/
+
+# Ignore Python source files and build output
+*.py
+dist/
